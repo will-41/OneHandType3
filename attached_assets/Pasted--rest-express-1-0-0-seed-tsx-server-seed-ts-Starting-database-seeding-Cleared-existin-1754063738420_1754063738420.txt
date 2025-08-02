@@ -1,0 +1,94 @@
+
+> rest-express@1.0.0 seed
+> tsx server/seed.ts
+
+🌱 Starting database seeding...
+🗑️ Cleared existing lessons and curriculum
+✅ Inserted lesson: basics-1 - Index Finger - F
+✅ Inserted lesson: basics-2 - Index Finger - J
+✅ Inserted lesson: basics-3 - Index Finger Combo
+✅ Inserted lesson: basics-4 - Middle Finger - D
+✅ Inserted lesson: basics-5 - Middle Finger - K
+✅ Inserted lesson: basics-6 - Two-Key Combo
+✅ Inserted lesson: words-1 - Common Words
+✅ Inserted lesson: words-2 - Short Words
+✅ Inserted lesson: words-3 - Medium Words
+✅ Inserted lesson: words-4 - Technical Terms
+✅ Inserted lesson: words-5 - Advanced Vocabulary
+✅ Inserted lesson: sentences-1 - Simple Sentences
+✅ Inserted lesson: sentences-2 - Descriptive Sentences
+✅ Inserted lesson: sentences-3 - Complex Sentences
+✅ Inserted lesson: sentences-4 - Technical Writing
+✅ Inserted lesson: sentences-5 - Academic Writing
+✅ Inserted lesson: advanced-1 - Mixed Content
+✅ Inserted lesson: advanced-2 - Code Snippets
+✅ Inserted lesson: advanced-3 - Special Characters
+✅ Inserted lesson: advanced-4 - Data Entry
+✅ Inserted lesson: advanced-5 - Master Challenge
+✅ Inserted lesson: left-special-1 - Left-Hand Optimization
+✅ Inserted lesson: right-special-1 - Right-Hand Optimization
+🏰 Inserted curriculum level: level-1-north - The Northern Basics: House Stark's Foundation
+⚔️ Inserted curriculum lesson: lesson-1-1 - Home Position: The Heart Tree
+⚔️ Inserted curriculum lesson: lesson-1-2 - The Stark Words: Winter is Coming
+⚔️ Inserted curriculum lesson: lesson-1-3 - Jon Snow's Bastard Letters
+🏰 Inserted curriculum level: level-2-riverlands - The Riverlands Flow: House Tully's Grace
+⚔️ Inserted curriculum lesson: lesson-2-1 - Tully Tributaries: Common Words
+🏰 Inserted curriculum level: level-3-reach - The Reach Prosperity: House Tyrell's Garden
+⚔️ Inserted curriculum lesson: lesson-3-1 - Rose Garden Sentences
+🏰 Inserted curriculum level: level-4-westerlands - The Westerlands Wealth: House Lannister's Gold
+⚔️ Inserted curriculum lesson: lesson-4-1 - Lannister Ledgers: Numbers and Symbols
+🏰 Inserted curriculum level: level-5-stormlands - The Stormlands Fury: House Baratheon's Power
+⚔️ Inserted curriculum lesson: lesson-5-1 - Baratheon Battle Commands
+🏰 Inserted curriculum level: level-6-vale - The Vale Heights: House Arryn's Honor
+⚔️ Inserted curriculum lesson: lesson-6-1 - Arryn Honor Code
+🏰 Inserted curriculum level: level-7-dorne - Dorne's Patience: House Martell's Endurance
+⚔️ Inserted curriculum lesson: lesson-7-1 - Martell Patience: Extended Passages
+🏰 Inserted curriculum level: level-8-iron-islands - The Iron Islands Steel: House Greyjoy's Strength
+⚔️ Inserted curriculum lesson: lesson-8-1 - Greyjoy Reaving: Technical Typing
+🏰 Inserted curriculum level: level-9-beyond-wall - Beyond the Wall: Night's Watch Vigilance
+⚔️ Inserted curriculum lesson: lesson-9-1 - Night's Watch Vows: Ultimate Challenge
+🏰 Inserted curriculum level: level-10-iron-throne - The Iron Throne: King of Typing
+❌ Seeding failed: NeonDbError: invalid input syntax for type integer: "99.5"
+    at execute (file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1556:55)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async seedDatabase (/home/runner/workspace/server/seed.ts:86:9) {
+  severity: 'ERROR',
+  code: '22P02',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: "unnamed portal parameter $8 = '...'",
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'numutils.c',
+  line: '617',
+  routine: 'pg_strtoint32_safe',
+  sourceError: undefined
+}
+💥 Seeding process failed: NeonDbError: invalid input syntax for type integer: "99.5"
+    at execute (file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1556:55)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async seedDatabase (/home/runner/workspace/server/seed.ts:86:9) {
+  severity: 'ERROR',
+  code: '22P02',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: "unnamed portal parameter $8 = '...'",
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'numutils.c',
+  line: '617',
+  routine: 'pg_strtoint32_safe',
+  sourceError: undefined
+}
