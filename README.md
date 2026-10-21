@@ -1,8 +1,8 @@
-# OneType
+# One-Type
 
-A free, offline typing trainer built for one-handed typists. Whether you type one-handed because of a motor disability, an injury, or an amputation, or you simply want to practice, OneType gives you structured lessons and layouts designed for a single hand.
+A free, offline typing trainer built for one-handed typists. Whether you type one-handed because of a motor disability, an injury, or an amputation, or you simply want to practice, One-Type gives you structured lessons and layouts designed for a single hand.
 
-> "OneType" is a working title and may change.
+> "One-Type" is a working title and may change.
 
 ## Features
 

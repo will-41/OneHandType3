@@ -22,5 +22,5 @@ if (root) {
     </StrictMode>
   );
 } else {
-  document.body.textContent = 'OneType failed to initialise. Please refresh the page.';
+  document.body.textContent = 'One-Type failed to initialise. Please refresh the page.';
 }

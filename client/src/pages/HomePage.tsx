@@ -91,7 +91,7 @@ export default function HomePage() {
     <PageContainer className="max-w-2xl">
       {/* Hero */}
       <header className="pb-5">
-        <h1 className="text-3xl font-bold tracking-tight">{isNew ? 'Welcome to OneType' : `${greeting()}`}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{isNew ? 'Welcome to One-Type' : `${greeting()}`}</h1>
         <p className="mt-1 text-muted-foreground">
           {isNew ? 'Comfortable one-handed typing, at your own pace.' : 'Ready when you are. Pick up wherever suits you.'}
         </p>

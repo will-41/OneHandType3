@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Single source of truth for the app name (final name pending trademark search).
-const APP_NAME = "OneType";
+const APP_NAME = "One-Type";
 const DESCRIPTION = "Learn to type fast with one hand — offline, private, free.";
 const BACKGROUND_COLOR = "#0f101a"; // hsl(232 28% 8%) — dark background token
 const THEME_COLOR = "#0f101a";

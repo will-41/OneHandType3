@@ -1,11 +1,11 @@
 # Owner Legal & Store Checklist
 
 ## 1. Final app name (do this before publishing)
-- [ ] Trademark search: [USPTO Trademark Search](https://tmsearch.uspto.gov) for "OneType" and close variants (typing, software, education classes 9, 41).
+- [ ] Trademark search: [USPTO Trademark Search](https://tmsearch.uspto.gov) for "One-Type" and close variants (typing, software, education classes 9, 41).
 - [ ] Search Google Play and the App Store for the name and similar names.
 - [ ] Check domain and GitHub/social handle availability.
-- [ ] If renaming: replace "OneType" in README.md, PRIVACY.md, THIRD_PARTY_NOTICES.md, AboutPage.tsx, PrivacyPage.tsx, plus the manifest, index.html title, and any in-app strings.
-- [ ] Note: "OneType" is only a working title; this is not legal advice. Consider a trademark attorney if you plan to register.
+- [ ] If renaming: replace "One-Type" in README.md, PRIVACY.md, THIRD_PARTY_NOTICES.md, AboutPage.tsx, PrivacyPage.tsx, plus the manifest, index.html title, and any in-app strings.
+- [ ] Note: "One-Type" is only a working title; this is not legal advice. Consider a trademark attorney if you plan to register.
 
 ## 2. Google Play
 - [ ] Create a Google Play developer account (one-time registration fee; identity verification required).

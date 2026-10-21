@@ -3,7 +3,7 @@
 Work top to bottom. Tick as you go.
 
 ## 1. Name and identity
-- [ ] Decide the final app name and run a trademark search (USPTO TESS/TSDR, EUIPO, WIPO; also search the Play Store and web). "OneType" is a placeholder.
+- [x] App name decided: **One-Type** (Play title "One-Type: One-Hand Typing"). Search found no registered "ONETYPE" mark; an unrelated iOS game "Typing games - OneType" exists, which the hyphenated name and descriptive title set apart. Before paid marketing, confirm on https://tmsearch.uspto.gov (classes 9 and 41).
 - [ ] If the name or application id changes, follow "Changing the app id / name" in `docs/ANDROID_BUILD.md` **before** the first upload (the id is permanent after that). Update `docs/PLAY_LISTING.md` and regenerate screenshots if the name appears in the UI.
 
 ## 2. Accounts and build

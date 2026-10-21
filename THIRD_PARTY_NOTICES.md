@@ -1,13 +1,13 @@
 # Third-Party Notices
 
-OneType is released under the [MIT License](LICENSE). It is built on open-source software distributed under their own licenses, listed below. We are grateful to every maintainer.
+One-Type is released under the [MIT License](LICENSE). It is built on open-source software distributed under their own licenses, listed below. We are grateful to every maintainer.
 
 ## Specific credits
 
 - **Inter typeface** by Rasmus Andersson, licensed under the [SIL Open Font License 1.1](https://openfontlicense.org), bundled through [`@fontsource/inter`](https://fontsource.org/fonts/inter).
 - **Radix UI** primitives, licensed under the MIT License ([radix-ui.com](https://www.radix-ui.com)).
 - **Lucide** icons, licensed under the ISC License ([lucide.dev](https://lucide.dev)).
-- **ARTSEY**: the ARTSEY one-handed layout is a community-created chorded layout concept ([artsey.io](https://artsey.io)). It is referenced by name only; OneType is not affiliated with or endorsed by the ARTSEY community.
+- **ARTSEY**: the ARTSEY one-handed layout is a community-created chorded layout concept ([artsey.io](https://artsey.io)). It is referenced by name only; One-Type is not affiliated with or endorsed by the ARTSEY community.
 
 ## License audit summary
 

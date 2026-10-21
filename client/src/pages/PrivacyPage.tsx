@@ -8,7 +8,7 @@ const SECTIONS: { heading: string; body: string[] }[] = [
   {
     heading: "What we collect",
     body: [
-      "Nothing. OneType does not collect, receive, or store any personal information on any server. We have no server.",
+      "Nothing. One-Type does not collect, receive, or store any personal information on any server. We have no server.",
     ],
   },
   {
@@ -30,13 +30,13 @@ const SECTIONS: { heading: string; body: string[] }[] = [
   {
     heading: "Deleting your data",
     body: [
-      "Clear the site data or app data for OneType in your browser or device settings, or uninstall the app. This permanently removes everything the app has stored.",
+      "Clear the site data or app data for One-Type in your browser or device settings, or uninstall the app. This permanently removes everything the app has stored.",
     ],
   },
   {
     heading: "Children",
     body: [
-      "OneType collects no data from anyone, including children. There is nothing to collect, share, or delete on our side.",
+      "One-Type collects no data from anyone, including children. There is nothing to collect, share, or delete on our side.",
     ],
   },
   {
@@ -71,7 +71,7 @@ export default function PrivacyPage() {
           Effective date: {EFFECTIVE_DATE}
         </p>
         <p className="mb-6">
-          OneType is a free, offline typing trainer. It collects no personal data, and it
+          One-Type is a free, offline typing trainer. It collects no personal data, and it
           never sends anything off your device.
         </p>
 

@@ -140,7 +140,7 @@ export default function SettingsPage() {
 
   return (
     <PageContainer className="max-w-2xl">
-      <PageHeader title="Settings" description="Tune OneType to the way you type." icon={<Settings className="h-5 w-5" />} />
+      <PageHeader title="Settings" description="Tune One-Type to the way you type." icon={<Settings className="h-5 w-5" />} />
 
       <Group title="Typing">
         <div className="space-y-3 px-4 py-3">
@@ -287,7 +287,7 @@ export default function SettingsPage() {
       <Group title="More">
         {[
           { href: '/tutorial', label: 'Tutorial', hint: 'Learn the one-handed layout basics' },
-          { href: '/about', label: 'About OneType', hint: 'Mission, credits and licence' },
+          { href: '/about', label: 'About One-Type', hint: 'Mission, credits and licence' },
           { href: '/privacy', label: 'Privacy', hint: 'Everything stays on your device' },
         ].map((item) => (
           <Link

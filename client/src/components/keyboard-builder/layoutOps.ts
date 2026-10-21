@@ -126,7 +126,7 @@ export function parseImportedLayout(text: string): Parsed {
   } catch {
     return bad('That file is not valid JSON.');
   }
-  if (!isObj(data) || data.format !== EXPORT_FORMAT) return bad('This is not a OneType layout file.');
+  if (!isObj(data) || data.format !== EXPORT_FORMAT) return bad('This is not a One-Type layout file.');
   if (data.version !== EXPORT_VERSION) return bad('This layout file version is not supported.');
   const src = data.layout;
   if (!isObj(src)) return bad('The layout data is missing.');

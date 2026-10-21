@@ -296,7 +296,7 @@ export const staticLessons: Lesson[] = [
     category: "advanced",
     level: 5,
     difficulty: 5,
-    content: "The OneType application (v3.2.1) revolutionizes accessibility in typing education. Features include: 1) One-handed layouts, 2) Real-time feedback, 3) Achievement system, 4) WCAG 2.1 AA compliance. Visit https://onetype.app for more information!",
+    content: "The One-Type app (version 1.0) makes typing practice accessible. Features include: 1) one-handed layouts, 2) real-time feedback, 3) achievements, 4) WCAG 2.2 AA design. Visit https://example.com for more information!",
     targetWpm: 40,
     timeLimit: 180,
     handCompatibility: ["left", "right"],

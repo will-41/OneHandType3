@@ -121,7 +121,7 @@ try {
   if (!download.suggestedFilename().endsWith('.json')) fail('export filename not .json');
   ok('unsaved guard + export download');
   await page.locator('input[type=file]').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{"format":"nope"}') });
-  await page.getByRole('alert').filter({ hasText: 'not a OneType layout file' }).waitFor({ timeout: 3000 });
+  await page.getByRole('alert').filter({ hasText: 'not a One-Type layout file' }).waitFor({ timeout: 3000 });
   ok('malformed import rejected');
   await page.getByRole('button', { name: 'Back to settings' }).click(); // not dirty now
 

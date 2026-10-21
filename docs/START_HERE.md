@@ -21,31 +21,27 @@ physically requires **you** (your identity, your accounts, your money). Each tak
 
 ## Your steps, in order
 
-1. **Pick the final app name.** "OneType" is a placeholder. Search it before you commit:
-   USPTO trademark search (https://tmsearch.uspto.gov), the Play Store, and the App Store.
-   Tell me the name and I'll swap it everywhere (app, store kit, app id).
-2. **Save the signing key** I sent you (`upload-keystore.jks` + its password) somewhere
-   safe — a password manager. **Never commit it, email it, or lose it.** (If lost, Google's
-   Play App Signing lets you request a reset, but it's slow.)
-3. **Add 4 GitHub secrets** — repo → Settings → Secrets and variables → Actions:
-   | Secret | Value |
-   |---|---|
-   | `ANDROID_KEYSTORE_BASE64` | contents of `upload-keystore.jks.base64` |
-   | `ANDROID_KEYSTORE_PASSWORD` | the password from `keystore-password.txt` |
-   | `ANDROID_KEY_ALIAS` | `upload` |
-   | `ANDROID_KEY_PASSWORD` | same password as above |
-4. **Merge to `main`** (I worked on branch `claude/jolly-babbage-wh3d9u` — ask me to open a
-   pull request, or merge it yourself).
-5. **Turn on GitHub Pages** — repo → Settings → Pages → Source: "GitHub Actions". This
-   publishes the privacy policy URL Google requires:
+1. **Name: done — "One-Type"** (Play title "One-Type: One-Hand Typing"). No registered
+   "ONETYPE" trademark turned up; an unrelated iOS game "Typing games - OneType" exists, and
+   the hyphen plus descriptive title set you apart. Optional: confirm yourself at
+   https://tmsearch.uspto.gov (classes 9 and 41) before paid marketing — I couldn't reach the
+   USPTO database from my environment.
+2. **Save the signing keys** (`One-Type-Signing-Keys.zip`) in a password manager or
+   encrypted folder. **Never commit, email, or lose them.** The repo is **public**, so these
+   must never go into it.
+3. **Add 4 GitHub secrets** — github.com/will-41/OneHandType3 → Settings → Secrets and
+   variables → Actions → New repository secret. Names and values are in the zip's
+   `SECRETS-HOW-TO.txt`.
+4. **Merged to `main`: done.**
+5. **Turn on GitHub Pages (free — the repo is public)** — Settings → Pages → Source:
+   "GitHub Actions". Then re-run the "Deploy to GitHub Pages" workflow once. Your privacy URL:
    `https://will-41.github.io/OneHandType3/privacy`.
-   ⚠️ Pages on a **private** repo needs a paid GitHub plan; otherwise make the repo public
-   (the code is MIT-licensed and contains no secrets).
-6. **Build the store file** — repo → Actions → "Android release" → Run workflow. Download
-   the `.aab` from the run's artifacts.
-7. **Google Play Console** — create a developer account ($25 one-time), then follow
-   `docs/RELEASE_CHECKLIST.md`. Google currently requires new personal accounts to run a
-   closed test with 12+ testers for 14 days before production — start that early.
+6. **Build the store file** — Actions → "Android release" → Run workflow → download the
+   `.aab` artifact.
+7. **When you're ready:** Google Play Console ($25 one-time) → follow
+   `docs/RELEASE_CHECKLIST.md`. New personal accounts need 12 testers for 14 days first.
+
+Costs: see `docs/COSTS.md`. Competition: see `docs/COMPETITION.md`.
 
 ## Try it right now
 

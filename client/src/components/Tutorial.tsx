@@ -179,7 +179,7 @@ export default function Tutorial({ onFinish }: TutorialProps) {
             <div aria-hidden="true" className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-primary/15 text-primary">
               <Keyboard className="h-12 w-12" />
             </div>
-            <StepHeading headingRef={headingRef}>Welcome to OneType</StepHeading>
+            <StepHeading headingRef={headingRef}>Welcome to One-Type</StepHeading>
             <p className="text-base text-muted-foreground">
               Learn to type comfortably with one hand. Short lessons, a full on-screen keyboard built for a single hand, and a
               pace that is entirely yours.

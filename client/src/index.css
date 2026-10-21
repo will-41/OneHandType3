@@ -4,7 +4,7 @@
 
 @layer base {
   /*
-   * OneType palette: indigo/violet primary, parchment-warm accents.
+   * One-Type palette: indigo/violet primary, parchment-warm accents.
    * Values are HSL triplets (H S% L%) consumed as hsl(var(--token)).
    * Light = parchment; dark (default) = deep indigo slate.
    * Contrast checked (WCAG AA): text pairs >= 4.5:1.

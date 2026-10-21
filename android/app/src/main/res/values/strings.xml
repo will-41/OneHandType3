@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">OneType</string>
-    <string name="title_activity_main">OneType</string>
+    <string name="app_name">One-Type</string>
+    <string name="title_activity_main">One-Type</string>
     <string name="package_name">com.wilmymoise.onehandtype</string>
     <string name="custom_url_scheme">com.wilmymoise.onehandtype</string>
 </resources>

@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 
-const APP_NAME = "OneType";
+const APP_NAME = "One-Type";
 const APP_VERSION = "1.0.0";
 
 const CREDITS: { name: string; note: string }[] = [

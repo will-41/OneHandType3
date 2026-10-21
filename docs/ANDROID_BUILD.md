@@ -3,12 +3,12 @@
 The app is the PWA wrapped with **Capacitor 8** (`@capacitor/core|cli|android` 8.5.3, Node >= 22, JDK 21, Android Gradle Plugin 8.13, Gradle 8.14.3).
 `compileSdk` / `targetSdk` = **36** (Capacitor 8 default), `minSdk` = 24. Google Play requires new apps and updates to target a recent API level (API 35 or higher at the time of writing); 36 satisfies this. Re-check the requirement each August at <https://developer.android.com/google/play/requirements/target-sdk> and upgrade Capacitor if it moves.
 
-Current identity (placeholders until the trademark search is done):
+Current identity (final name: One-Type; the application id is permanent after the first Play upload):
 
 | Item | Value | Where it lives |
 |---|---|---|
 | Application id | `com.wilmymoise.onehandtype` | `capacitor.config.ts` (`appId`), `android/app/build.gradle` (`namespace`, `applicationId`), Java package dir `android/app/src/main/java/com/wilmymoise/onehandtype/`, `android/app/src/main/res/values/strings.xml` |
-| App name | `OneType` | `capacitor.config.ts` (`appName`), `android/app/src/main/res/values/strings.xml` |
+| App name | `One-Type` | `capacitor.config.ts` (`appName`), `android/app/src/main/res/values/strings.xml` |
 | versionName / versionCode | `1.0.0` / `1` | `android/app/build.gradle` |
 
 ## A. Zero-install route (GitHub Actions)

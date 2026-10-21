@@ -1,10 +1,10 @@
 # Google Play listing copy (paste into Play Console)
 
-Replace "OneType" everywhere if the final name changes after the trademark search.
+Final app name: **One-Type**. Play title below sets it apart from the unrelated iOS game "Typing games - OneType".
 
 ## Store listing
 
-- **App name (max 30):** `OneType: One-Hand Typing` (24)
+- **App name (max 30):** `One-Type: One-Hand Typing` (24)
 - **Short description (max 80):** `Learn to type fast with one hand. Free, offline, no ads, no accounts.` (68)
 - **Category:** Education (app type: App)
 - **Tags:** Education, Typing, Accessibility, Productivity (choose the closest available in Console)
@@ -16,7 +16,7 @@ Replace "OneType" everywhere if the final name changes after the trademark searc
 ### Full description (max 4000)
 
 ```
-OneType teaches you to type quickly and comfortably with one hand - whether you type one-handed because of an injury, a disability, amputation, a stroke, or simply because your other hand is busy.
+One-Type teaches you to type quickly and comfortably with one hand - whether you type one-handed because of an injury, a disability, amputation, a stroke, or simply because your other hand is busy.
 
 Everything runs on your phone. No account, no ads, no tracking, no internet needed.
 
@@ -46,7 +46,7 @@ PRIVATE BY DESIGN
 - The app collects no personal data and has no ads, no in-app purchases and no sign-in
 - Delete everything at any time by clearing app storage or uninstalling
 
-OneType is free. Feedback and ideas are welcome at wilmymoise@gmail.com.
+One-Type is free. Feedback and ideas are welcome at wilmymoise@gmail.com.
 ```
 
 (about 1,500 characters; limit 4000)
