@@ -1,195 +1,226 @@
-import { useState, useEffect } from 'react';
-import { Card } from './ui/card';
-import { Badge } from './ui/badge';
+import { useMemo, useState } from 'react';
+import { useLocation } from 'wouter';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Flame, Waves, Leaf, Zap, Lock } from 'lucide-react';
-import { type Lesson, lessons } from '../lib/lessons';
+import { Badge } from './ui/badge';
+import { Progress } from './ui/progress';
+import { cn } from '../lib/utils';
+import { useTypingStore } from '../lib/stores/useTypingStore';
+import { regionAccent, regionAccentAlpha } from '../lib/theme';
+import {
+  Crown,
+  Sword,
+  Shield,
+  Lock,
+  CheckCircle,
+  Play,
+  Star,
+  Map as MapIcon,
+  ArrowRight,
+  ChevronDown,
+} from 'lucide-react';
+import {
+  gamifiedCurriculum,
+  type CurriculumLevel,
+  type CurriculumLesson,
+} from '../lib/gamifiedCurriculum';
 
 interface RealmLessonNavigatorProps {
-  onStartLesson: (lesson: Lesson) => void;
+  /** Override the default behaviour (navigate to /lesson/:id). */
+  onStartLesson?: (lesson: CurriculumLesson) => void;
+  className?: string;
 }
 
-// Guild assignments for database lessons (Realm of Keys theming)
-const LESSON_GUILD_MAPPING: Record<string, string> = {
-  'basics-1': 'Emberkeepers',
-  'basics-2': 'Emberkeepers',
-  'basics-3': 'Emberkeepers',
-  'basics-4': 'Emberkeepers',
-  'basics-5': 'Emberkeepers',
-  'basics-6': 'Emberkeepers',
-  'words-1': 'Tidewrights',
-  'words-2': 'Tidewrights',
-  'words-3': 'Tidewrights',
-  'sentences-1': 'Orchard Wardens',
-  'sentences-2': 'Orchard Wardens'
-};
+const TOTAL_LESSONS = gamifiedCurriculum.reduce((sum, level) => sum + level.lessons.length, 0);
 
-const CHARACTER_MAPPING: Record<string, string> = {
-  'basics-1': 'Mira Lanternwick',
-  'basics-2': 'Tobin Reedwhistle',
-  'basics-3': 'Wren Highcrest',
-  'basics-4': 'Pip Fernsby',
-  'basics-5': 'Dash Galewind',
-  'basics-6': 'Aldric Highcrest',
-  'words-1': 'Corin Marshwater',
-  'words-2': 'Edda Millbrook',
-  'words-3': 'Orla Fenwick',
-  'sentences-1': 'Rosalind Thornfield',
-  'sentences-2': 'Granny Willowby'
-};
+function getRegionIcon(level: CurriculumLevel) {
+  const region = level.storyTheme.region.toLowerCase();
+  if (region.includes('hearth')) return <Shield className="h-5 w-5" aria-hidden="true" />;
+  if (region.includes('bloom')) return <Star className="h-5 w-5" aria-hidden="true" />;
+  if (region.includes('realms') || region.includes('crown')) return <Crown className="h-5 w-5" aria-hidden="true" />;
+  if (region.includes('tidebreak')) return <Sword className="h-5 w-5" aria-hidden="true" />;
+  return <MapIcon className="h-5 w-5" aria-hidden="true" />;
+}
 
-const GUILD_COLORS = {
-  Emberkeepers: 'bg-orange-900 border-orange-600',
-  Tidewrights: 'bg-sky-900 border-sky-600',
-  'Orchard Wardens': 'bg-emerald-900 border-emerald-600',
-  Stormwardens: 'bg-indigo-900 border-indigo-600'
-};
+export default function RealmLessonNavigator({ onStartLesson, className }: RealmLessonNavigatorProps) {
+  const completedLessons = useTypingStore((s) => s.completedLessons);
+  const [, navigate] = useLocation();
+  const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
 
-const GUILD_ICONS = {
-  Emberkeepers: Flame,
-  Tidewrights: Waves,
-  'Orchard Wardens': Leaf,
-  Stormwardens: Zap
-};
+  const completed = useMemo(() => new Set(completedLessons), [completedLessons]);
 
-export default function RealmLessonNavigator({ onStartLesson }: RealmLessonNavigatorProps) {
-  const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
-  const [currentLessons, setCurrentLessons] = useState(lessons);
+  const levelProgress = (level: CurriculumLevel): number => {
+    if (level.lessons.length === 0) return 0;
+    const done = level.lessons.filter((l) => completed.has(l.id)).length;
+    return Math.round((done / level.lessons.length) * 100);
+  };
 
-  // Listen for lessons loaded event and update local state
-  useEffect(() => {
-    const handleLessonsLoaded = (event: CustomEvent) => {
-      console.log('🔄 Lessons loaded event received');
-      setCurrentLessons([...lessons]); // Force re-render with fresh lessons
-    };
+  const isLevelUnlocked = (levelIndex: number): boolean => {
+    if (levelIndex === 0) return true;
+    const prev = gamifiedCurriculum[levelIndex - 1];
+    return prev.lessons.every((l) => completed.has(l.id));
+  };
 
-    window.addEventListener('lessonsLoaded', handleLessonsLoaded as EventListener);
+  const isLessonUnlocked = (levelIndex: number, lessonIndex: number): boolean => {
+    if (!isLevelUnlocked(levelIndex)) return false;
+    if (lessonIndex === 0) return true;
+    return completed.has(gamifiedCurriculum[levelIndex].lessons[lessonIndex - 1].id);
+  };
 
-    return () => {
-      window.removeEventListener('lessonsLoaded', handleLessonsLoaded as EventListener);
-    };
-  }, []);  // This effect only needs to run once on mount
+  const completedCount = gamifiedCurriculum.reduce(
+    (sum, level) => sum + level.lessons.filter((l) => completed.has(l.id)).length,
+    0
+  );
+  const overallPercent = TOTAL_LESSONS > 0 ? Math.round((completedCount / TOTAL_LESSONS) * 100) : 0;
 
-  console.log('🏰 RealmLessonNavigator rendered');
-  console.log('📞 onStartLesson prop:', typeof onStartLesson, !!onStartLesson);
-  console.log('📚 Available lessons count:', currentLessons.length);
-  console.log('📋 First few lessons:', currentLessons.slice(0, 3).map(l => ({ id: l.id, title: l.title })));
-  console.log('🔍 All lesson IDs:', currentLessons.map(l => l.id));
-
-  const handleLessonClick = (lesson: any) => {
-    console.log('🎯 LESSON CLICK HANDLER START');
-    console.log('📋 Clicked lesson data:', lesson);
-    console.log('🔧 onStartLesson function available:', typeof onStartLesson, !!onStartLesson);
-
-    if (!onStartLesson) {
-      console.error('❌ onStartLesson function not available');
-      alert('Navigation error. Please refresh the page.');
-      return;
-    }
-
-    console.log('✅ Setting selected lesson:', lesson.id);
-    setSelectedLesson(lesson.id);
-
-    // Ensure lesson has proper content
-    const formattedLesson: Lesson = {
-      ...lesson,
-      content: lesson.content || lesson.text || 'Practice typing with this lesson.',
-      text: lesson.content || lesson.text || 'Practice typing with this lesson.'
-    };
-
-    console.log('📤 CALLING onStartLesson with formatted lesson:', formattedLesson);
-
-    try {
-      onStartLesson(formattedLesson);
-      console.log('✅ onStartLesson called successfully');
-    } catch (error) {
-      console.error('🚨 Error calling onStartLesson:', error);
-      alert('Error starting lesson: ' + error);
-    }
-
-    console.log('🎯 LESSON CLICK HANDLER END');
+  const startLesson = (lesson: CurriculumLesson) => {
+    if (onStartLesson) onStartLesson(lesson);
+    else navigate(`/lesson/${encodeURIComponent(lesson.id)}`);
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-2">Choose Your Training</h2>
-        <p className="text-slate-300">Begin your journey in the realm of one-handed typing</p>
+    <div className={cn('space-y-6', className)}>
+      <div className="space-y-2 text-center">
+        <h2 className="flex items-center justify-center gap-2 text-2xl font-bold">
+          <Crown className="h-6 w-6 text-accent" aria-hidden="true" />
+          The Ten Realms of Typing
+        </h2>
+        <p className="text-muted-foreground">
+          Master the art of one-handed typing through your journey across the Ten Realms
+        </p>
+        <Progress value={overallPercent} className="mx-auto max-w-md" aria-label="Overall curriculum progress" />
+        <p className="text-sm text-muted-foreground">
+          Overall progress: {overallPercent}% ({completedCount} of {TOTAL_LESSONS} lessons)
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {currentLessons.length === 0 ? (
-          <div className="col-span-full text-center py-8">
-            <p className="text-slate-400">Loading lessons from database...</p>
-          </div>
-        ) : (
-          currentLessons.slice(0, 6).map((lesson) => {
-            const guild = LESSON_GUILD_MAPPING[lesson.id] || 'Emberkeepers';
-            const character = CHARACTER_MAPPING[lesson.id] || 'Unknown Hero';
-            const GuildIcon = GUILD_ICONS[guild as keyof typeof GUILD_ICONS];
-            const isSelected = selectedLesson === lesson.id;
-            const unlocked = !lesson.prerequisites || lesson.prerequisites.length === 0 || lesson.id === 'basics-1';
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {gamifiedCurriculum.map((level, levelIndex) => {
+          const unlocked = isLevelUnlocked(levelIndex);
+          const progress = levelProgress(level);
+          const isCompleted = progress === 100;
+          const expanded = selectedLevel === level.id && unlocked;
+          const panelId = `realm-panel-${level.id}`;
 
-            return (
-              <Card 
-                key={lesson.id}
-                className={`p-6 cursor-pointer transition-all duration-300 ${
-                  GUILD_COLORS[guild as keyof typeof GUILD_COLORS]
-                } ${
-                  isSelected ? 'ring-2 ring-blue-500 scale-105' : 'hover:scale-102'
-                } ${
-                  !unlocked ? 'opacity-60' : ''
+          return (
+            <Card
+              key={level.id}
+              className={cn(
+                'overflow-hidden border-l-4 transition-shadow',
+                unlocked ? 'hover:shadow-lg' : 'opacity-70',
+                expanded && 'ring-2 ring-primary'
+              )}
+              style={{ borderLeftColor: regionAccent(level.id) }}
+            >
+              <button
+                type="button"
+                className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-expanded={expanded}
+                aria-controls={panelId}
+                aria-disabled={!unlocked}
+                aria-label={`${level.storyTheme.region}, level ${levelIndex + 1}, ${progress}% complete${
+                  unlocked ? '' : ', locked: finish the previous realm first'
                 }`}
-                onClick={() => unlocked && handleLessonClick(lesson)}
+                onClick={() => unlocked && setSelectedLevel(expanded ? null : level.id)}
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <GuildIcon className="h-5 w-5 text-slate-300" aria-hidden="true" />
-                    <Badge variant="secondary" className="text-xs">
-                      Level {lesson.level}
-                    </Badge>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                        style={{ background: regionAccentAlpha(level.id, 0.18), color: regionAccent(level.id) }}
+                      >
+                        {getRegionIcon(level)}
+                      </span>
+                      <div>
+                        <CardTitle className="text-lg leading-tight">{level.title}</CardTitle>
+                        <CardDescription className="text-sm">{level.storyTheme.region}</CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      {!unlocked && <Lock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />}
+                      {isCompleted && <CheckCircle className="h-4 w-4 text-success" aria-hidden="true" />}
+                      {unlocked && (
+                        <ChevronDown
+                          className={cn('h-4 w-4 text-muted-foreground transition-transform', expanded && 'rotate-180')}
+                          aria-hidden="true"
+                        />
+                      )}
+                      <Badge variant={isCompleted ? 'default' : 'secondary'} className="text-xs">
+                        Level {levelIndex + 1}
+                      </Badge>
+                    </div>
                   </div>
-                  {!unlocked && <Lock className="h-4 w-4 text-slate-400" />}
-                </div>
-
-                <h3 className="text-xl font-bold mb-2 text-white">{lesson.title}</h3>
-                <p className="text-slate-300 text-sm mb-4">{lesson.description}</p>
-                <p className="text-xs text-slate-400 mb-4">Character: {character}</p>
-
-                <div className="flex justify-between items-center">
-                  <div className="text-xs text-slate-400">
-                    Target: {lesson.targetWpm} WPM
+                </CardHeader>
+                <CardContent className="space-y-3 pb-4">
+                  <p className="line-clamp-2 text-sm text-muted-foreground">{level.storyTheme.storyline}</p>
+                  <Progress value={progress} className="h-2" aria-hidden="true" />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{progress}% complete</span>
+                    <span>{level.lessons.length} lessons</span>
                   </div>
-                  <Button 
-                    size="sm"
-                    disabled={!unlocked}
-                    className={`${
-                      unlocked 
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                        : 'bg-slate-600 text-slate-400 cursor-not-allowed'
-                    }`}
-                    onClick={(e) => {
-                      console.log('🔘 BUTTON CLICKED:', lesson.id);
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleLessonClick(lesson);
-                    }}
-                  >
-                    {unlocked ? 'Start Training' : 'Locked'}
-                  </Button>
-                </div>
-              </Card>
-            );
-          })
-        )}
+                  {!unlocked && (
+                    <p className="text-xs text-muted-foreground">Complete the previous realm to unlock.</p>
+                  )}
+                </CardContent>
+              </button>
+
+              {expanded && (
+                <CardContent id={panelId} className="space-y-2 border-t pt-4">
+                  <h3 className="text-sm font-medium">Lessons</h3>
+                  {level.lessons.map((lesson, lessonIndex) => {
+                    const lessonUnlocked = isLessonUnlocked(levelIndex, lessonIndex);
+                    const lessonCompleted = completed.has(lesson.id);
+                    return (
+                      <Button
+                        key={lesson.id}
+                        variant={lessonCompleted ? 'default' : 'outline'}
+                        className={cn(
+                          'h-auto min-h-[48px] w-full justify-between py-2 text-left',
+                          !lessonUnlocked && 'cursor-not-allowed opacity-50'
+                        )}
+                        onClick={() => lessonUnlocked && startLesson(lesson)}
+                        disabled={!lessonUnlocked}
+                      >
+                        <span className="flex items-center gap-2">
+                          {lessonCompleted ? (
+                            <CheckCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                          ) : lessonUnlocked ? (
+                            <Play className="h-4 w-4 shrink-0" aria-hidden="true" />
+                          ) : (
+                            <Lock className="h-4 w-4 shrink-0" aria-hidden="true" />
+                          )}
+                          <span>
+                            <span className="block text-sm font-medium">{lesson.title}</span>
+                            <span className="block text-xs opacity-80">
+                              {lesson.storyTheme.character} &bull; {lesson.storyTheme.guild}
+                            </span>
+                          </span>
+                        </span>
+                        <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      </Button>
+                    );
+                  })}
+                </CardContent>
+              )}
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Debug info */}
-      <div className="mt-8 p-4 bg-black bg-opacity-30 rounded-lg text-xs text-slate-400">
-        <p>Debug: {lessons.length} lessons loaded from database</p>
-        <p>Selected: {selectedLesson || 'none'}</p>
-        <p>Navigator ready: ✅</p>
+      <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <Lock className="h-3 w-3" aria-hidden="true" /> Locked
+        </span>
+        <span className="flex items-center gap-1">
+          <Play className="h-3 w-3" aria-hidden="true" /> Available
+        </span>
+        <span className="flex items-center gap-1">
+          <CheckCircle className="h-3 w-3 text-success" aria-hidden="true" /> Completed
+        </span>
       </div>
     </div>
   );
 }
+
+export { RealmLessonNavigator };

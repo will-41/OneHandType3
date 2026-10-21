@@ -1,0 +1,231 @@
+import type { ReactNode } from 'react';
+import { Link } from 'wouter';
+import { Settings, Hand, ChevronRight } from 'lucide-react';
+import { Switch } from '../components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import PageContainer from '../components/shell/PageContainer';
+import PageHeader from '../components/shell/PageHeader';
+import { cn } from '../lib/utils';
+import { useTypingStore, type HandPreference } from '../lib/stores/useTypingStore';
+import { availableLayouts } from '../lib/keyboardLayouts';
+import { mirrorRow } from '../lib/theme';
+
+const TAB_PREVIEW = ['Home', 'Learn', 'Practice', 'Stats', 'Settings'];
+const TEXT_SIZES = [
+  { label: 'Default', px: 16 },
+  { label: 'Large', px: 18 },
+  { label: 'Extra large', px: 20 },
+];
+
+function Group({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="mb-8" aria-label={title}>
+      <h2 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h2>
+      <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">{children}</div>
+    </section>
+  );
+}
+
+function ToggleRow({
+  id,
+  label,
+  description,
+  checked,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  description?: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex min-h-[56px] items-center justify-between gap-4 px-4 py-3">
+      <label htmlFor={id} className="flex-1 cursor-pointer">
+        <span className="block font-medium">{label}</span>
+        {description && <span className="block text-sm text-muted-foreground">{description}</span>}
+      </label>
+      <Switch id={id} checked={checked} onCheckedChange={onChange} />
+    </div>
+  );
+}
+
+function Segmented<T extends string | number>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: { label: string; value: T }[];
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div role="radiogroup" aria-label={label} className="flex gap-1 rounded-lg bg-muted p-1">
+      {options.map((o) => {
+        const selected = o.value === value;
+        return (
+          <button
+            key={String(o.value)}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            onClick={() => onChange(o.value)}
+            className={cn(
+              'min-h-[48px] flex-1 rounded-md px-3 text-sm font-medium transition-colors',
+              selected ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function SettingsPage() {
+  const hand = useTypingStore((s) => s.handPreference);
+  const setHandPreference = useTypingStore((s) => s.setHandPreference);
+  const keyboardLayout = useTypingStore((s) => s.keyboardLayout);
+  const setKeyboardLayout = useTypingStore((s) => s.setKeyboardLayout);
+  const themeMode = useTypingStore((s) => s.themeMode);
+  const setThemeMode = useTypingStore((s) => s.setThemeMode);
+  const a11y = useTypingStore((s) => s.accessibilitySettings);
+  const setSoundEnabled = useTypingStore((s) => s.setSoundEnabled);
+  const setHighContrast = useTypingStore((s) => s.setHighContrast);
+  const setFontSize = useTypingStore((s) => s.setFontSize);
+  const setLargeText = useTypingStore((s) => s.setLargeText);
+  const update = useTypingStore((s) => s.updateAccessibilitySettings);
+
+  const handOptions: { label: string; value: HandPreference }[] = [
+    { label: 'Left hand', value: 'left' },
+    { label: 'Right hand', value: 'right' },
+  ];
+
+  const layoutName = availableLayouts.find((l) => l.id === keyboardLayout)?.name;
+
+  return (
+    <PageContainer className="max-w-2xl">
+      <PageHeader title="Settings" description="Tune OneType to the way you type." icon={<Settings className="h-5 w-5" />} />
+
+      <Group title="Typing">
+        <div className="space-y-3 px-4 py-3">
+          <div>
+            <div className="flex items-center gap-2 font-medium">
+              <Hand className="h-4 w-4" aria-hidden="true" /> Typing hand
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Left-hand mode mirrors the navigation bar and moves main actions to the left edge.
+            </p>
+          </div>
+          <Segmented label="Typing hand" value={hand} options={handOptions} onChange={setHandPreference} />
+          <div
+            aria-hidden="true"
+            className={cn('flex gap-1 rounded-lg border border-dashed border-border p-2 text-[11px] text-muted-foreground', mirrorRow(hand))}
+          >
+            {TAB_PREVIEW.map((t) => (
+              <span key={t} className="flex-1 rounded bg-muted py-1 text-center">
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2 px-4 py-3">
+          <label htmlFor="layout-select" className="block font-medium">
+            Keyboard layout
+          </label>
+          <Select value={keyboardLayout} onValueChange={(v) => setKeyboardLayout(v as typeof keyboardLayout)}>
+            <SelectTrigger id="layout-select" className="min-h-[48px]" aria-label="Keyboard layout">
+              <SelectValue placeholder={layoutName ?? 'Choose a layout'} />
+            </SelectTrigger>
+            <SelectContent>
+              {availableLayouts.map((l) => (
+                <SelectItem key={l.id} value={l.id} className="min-h-[44px]">
+                  {l.name}
+                  {l.specialized ? ' (one-hand)' : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {availableLayouts.find((l) => l.id === keyboardLayout)?.description && (
+            <p className="text-sm text-muted-foreground">
+              {availableLayouts.find((l) => l.id === keyboardLayout)?.description}
+            </p>
+          )}
+        </div>
+
+        <ToggleRow
+          id="sound"
+          label="Sound effects"
+          description="Key clicks and completion chimes."
+          checked={a11y.soundEnabled}
+          onChange={(v) => {
+            setSoundEnabled(v);
+          }}
+        />
+      </Group>
+
+      <Group title="Appearance">
+        <ToggleRow
+          id="dark-mode"
+          label="Dark mode"
+          checked={themeMode === 'dark'}
+          onChange={(v) => setThemeMode(v ? 'dark' : 'light')}
+        />
+        <div className="space-y-2 px-4 py-3">
+          <div className="font-medium">Text size</div>
+          <Segmented
+            label="Text size"
+            value={a11y.fontSize || 16}
+            options={TEXT_SIZES.map((t) => ({ label: t.label, value: t.px }))}
+            onChange={(px) => {
+              setFontSize(px);
+              setLargeText(px > 16);
+            }}
+          />
+        </div>
+      </Group>
+
+      <Group title="Accessibility">
+        <ToggleRow
+          id="high-contrast"
+          label="High contrast"
+          description="Stronger borders and text colours."
+          checked={a11y.highContrast}
+          onChange={setHighContrast}
+        />
+        <ToggleRow
+          id="reduce-motion"
+          label="Reduce motion"
+          description="Turn off page transitions and animations."
+          checked={a11y.reduceMotion}
+          // store's setReducedMotion writes a mismatched key (reducedMotion); use the generic updater.
+          onChange={(v) => update({ reduceMotion: v })}
+        />
+      </Group>
+
+      <Group title="More">
+        {[
+          { href: '/tutorial', label: 'Tutorial', hint: 'Learn the one-handed layout basics' },
+          { href: '/about', label: 'About OneType', hint: 'Mission, credits and licence' },
+          { href: '/privacy', label: 'Privacy', hint: 'Everything stays on your device' },
+        ].map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="flex min-h-[56px] items-center justify-between gap-4 px-4 py-3 hover:bg-muted focus-visible:bg-muted"
+          >
+            <span>
+              <span className="block font-medium">{item.label}</span>
+              <span className="block text-sm text-muted-foreground">{item.hint}</span>
+            </span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          </Link>
+        ))}
+      </Group>
+    </PageContainer>
+  );
+}

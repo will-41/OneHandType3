@@ -1,89 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import { Route, Switch, useLocation, useRoute } from 'wouter';
 import HomePage from './pages/HomePage';
-import LessonPage from './pages/LessonPage';
+import CurriculumPage from './pages/CurriculumPage';
+import PracticePage from './pages/PracticePage';
+import StatsPage from './pages/StatsPage';
+import SettingsPage from './pages/SettingsPage';
 import TutorialPage from './pages/TutorialPage';
+import AboutPage from './pages/AboutPage';
+import PrivacyPage from './pages/PrivacyPage';
+import NotFound from './pages/not-found';
 import { useDataLoader } from './hooks/useDataLoader';
-import { Lesson } from './lib/lessons';
 import { gamifiedCurriculum } from './lib/gamifiedCurriculum';
 import ErrorBoundary from './components/ErrorBoundary';
 import LessonRenderer from './components/LessonRenderer';
+import AppShell from './components/shell/AppShell';
+import { useDocumentTheme } from './lib/theme';
 
-// Define app page types
-type AppPage = 'home' | 'lesson' | 'tutorial';
+/** Navigate back in history when possible, otherwise fall back to a route. */
+function useGoBack(fallback = '/'): () => void {
+  const [, navigate] = useLocation();
+  return () => {
+    if (window.history.length > 1) window.history.back();
+    else navigate(fallback);
+  };
+}
+
+function LessonRoute() {
+  const [, params] = useRoute<{ id: string }>('/lesson/:id');
+  const { lessons } = useDataLoader();
+  const goBack = useGoBack('/');
+  const id = params?.id ? decodeURIComponent(params.id) : '';
+  return (
+    <ErrorBoundary componentName="LessonPage">
+      <LessonRenderer
+        key={id}
+        selectedLessonId={id}
+        lessons={lessons}
+        gamifiedCurriculum={gamifiedCurriculum}
+        onBack={goBack}
+      />
+    </ErrorBoundary>
+  );
+}
+
+function TutorialRoute() {
+  const [, navigate] = useLocation();
+  return (
+    <ErrorBoundary componentName="TutorialPage">
+      <TutorialPage onComplete={() => navigate('/')} />
+    </ErrorBoundary>
+  );
+}
+
+function page(name: string, element: JSX.Element) {
+  return <ErrorBoundary componentName={name}>{element}</ErrorBoundary>;
+}
 
 export default function App() {
-  // State management
-  const [currentPage, setCurrentPage] = useState<AppPage>('home');
-  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
-  
-  // Load data using custom hook
-  const { lessons, loading, error } = useDataLoader();
+  useDocumentTheme();
 
-  // Navigation functions
-  const navigateToLesson = (lessonId: string) => {
-    setSelectedLessonId(lessonId);
-    setCurrentPage('lesson');
-  };
-
-  const navigateToHome = () => {
-    setCurrentPage('home');
-    setSelectedLessonId(null);
-  };
-
-  const navigateToTutorial = () => {
-    setCurrentPage('tutorial');
-  };
-
-  // Loading state
-  if (loading) {
-    return (
-      <ErrorBoundary componentName="LoadingScreen">
-        <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-3xl font-bold mb-4">OneType</div>
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-            <div className="text-slate-400">Loading lessons...</div>
-          </div>
-        </div>
-      </ErrorBoundary>
-    );
-  }
-
-  // Main app render with ErrorBoundary wrapping
   return (
-      <ErrorBoundary 
-        componentName="MainApp" 
-        onError={(error, info) => {
-        }}
-      >
-        <div className="min-h-screen bg-slate-900">
-          {currentPage === 'home' && (
-            <ErrorBoundary componentName="HomePage">
-              <HomePage 
-                onNavigateToLesson={navigateToLesson}
-                onNavigateToTutorial={navigateToTutorial}
-                lessons={lessons || []}
-              />
-            </ErrorBoundary>
-          )}
-          
-          {currentPage === 'lesson' && selectedLessonId && (
-            <ErrorBoundary componentName="LessonPage">
-              <LessonRenderer 
-                selectedLessonId={selectedLessonId} 
-                lessons={lessons} 
-                gamifiedCurriculum={gamifiedCurriculum} 
-                onBack={navigateToHome} 
-              />
-            </ErrorBoundary>
-          )}
-          
-          {currentPage === 'tutorial' && (
-            <ErrorBoundary componentName="TutorialPage">
-              <TutorialPage onComplete={navigateToHome} />
-            </ErrorBoundary>
-          )}
-        </div>
-      </ErrorBoundary>
+    <ErrorBoundary componentName="MainApp">
+      <AppShell>
+        <Switch>
+          <Route path="/">{page('HomePage', <HomePage />)}</Route>
+          <Route path="/curriculum">{page('CurriculumPage', <CurriculumPage />)}</Route>
+          <Route path="/practice">{page('PracticePage', <PracticePage />)}</Route>
+          <Route path="/lesson/:id" component={LessonRoute} />
+          <Route path="/stats">{page('StatsPage', <StatsPage />)}</Route>
+          <Route path="/settings">{page('SettingsPage', <SettingsPage />)}</Route>
+          <Route path="/tutorial" component={TutorialRoute} />
+          <Route path="/about">{page('AboutPage', <AboutPage />)}</Route>
+          <Route path="/privacy">{page('PrivacyPage', <PrivacyPage />)}</Route>
+          <Route component={NotFound} />
+        </Switch>
+      </AppShell>
+    </ErrorBoundary>
   );
 }

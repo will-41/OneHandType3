@@ -1,123 +1,36 @@
-# OneType - One-Handed Typing App
+# OneType
 
-A revolutionary mobile-first, gamified typing application designed specifically for one-handed users. Features comprehensive accessibility support, adaptive learning, and an engaging Duolingo-inspired interface.
+A free, offline typing trainer built for one-handed typists. Whether you type one-handed because of a motor disability, an injury, or an amputation, or you simply want to practice, OneType gives you structured lessons and layouts designed for a single hand.
 
-## 🚀 Features
+> "OneType" is a working title and may change.
 
-### Core Functionality
-- **One-handed optimized keyboard layouts** for both left and right hands
-- **Progressive lesson system** with 20+ structured lessons
-- **Real-time typing metrics** (WPM, accuracy, consistency tracking)
-- **Gamified progression** with achievements and badges
-- **Professional settings system** with 5 organized tabs
+## Features
 
-### Accessibility & Customization
-- **WCAG 2.1 AA compliant** design
-- **Comprehensive accessibility settings** (high contrast, reduced motion, screen reader support)
-- **Real-time preview** for font size, line height, and color adjustments
-- **Professional UI controls** with sliders, switches, and color pickers
-- **Persistent user preferences** saved across sessions
+- **10-level curriculum** that builds from home-row basics to full text.
+- **8+ one-handed keyboard layouts**, including the chorded ARTSEY layout.
+- **Custom layouts and lessons** so you can adapt the app to your own setup.
+- **Offline PWA**: install it and practice anywhere, no connection needed.
+- **Gamified progression** with fair, encouraging rewards and no dark patterns.
+- **Local-first and private**: no server, no accounts, no analytics, no ads. All progress is stored on your device.
 
-### Mobile-Optimized Experience
-- **Touch-friendly virtual keyboard** with visual feedback
-- **Responsive design** that adapts to phone screens
-- **Mobile-specific settings panel**
-- **Optimized performance** for mobile devices
+## Screenshots
 
-## 🛠️ Technology Stack
+_Screenshots coming soon._
 
-### Frontend
-- **React 18** with TypeScript for type safety
-- **Vite** for fast development and optimized builds
-- **Tailwind CSS** with custom design system
-- **Radix UI** for accessible, unstyled components
-- **Zustand** for lightweight state management
-- **TanStack Query** for server state management
+## Local development
 
-### Backend
-- **Express.js** server with TypeScript
-- **Drizzle ORM** for PostgreSQL with migration support
-- **In-memory storage** for development
-
-### Development Tools
-- **Vite middleware integration** for seamless full-stack development
-- **Hot module replacement** for both client and server
-- **TypeScript compilation** checking
-
-## 🏃‍♂️ Quick Start
-
-### Development
 ```bash
 npm install
-npm run dev
+npm run dev     # start the dev server
+npm run build   # production build
 ```
 
-### Production Build
-```bash
-npm run build
-npm start
-```
+## Tech stack
 
-### Database Management
-```bash
-npm run db:push
-```
+React 18, TypeScript, Vite, Tailwind CSS, Radix UI, wouter, Zustand, Framer Motion, Lucide icons. Installable as a PWA.
 
-## 📱 Mobile Deployment
+## License and privacy
 
-The app is optimized for mobile deployment on Replit:
-1. Click the Deploy button in Replit
-2. Get your `.replit.app` URL
-3. Add to home screen for native app experience
-
-## 🎯 Key Components
-
-### Typing Engine
-- Real-time input processing and validation
-- Comprehensive metrics calculation (WPM, accuracy)
-- Error detection and correction tracking
-
-### Settings System
-- **Typing Tab**: Hand preference, finger guide, WPM goals
-- **Display Tab**: Font size, line height with live preview
-- **Audio Tab**: Master volume, sound effect toggles
-- **Accessibility Tab**: High contrast, reduced motion, screen reader support
-- **Appearance Tab**: Custom color themes with color pickers
-
-### Lesson System
-- Progressive difficulty with unlockable lessons
-- Structured learning path for one-handed typing mastery
-- Direct lesson access from main menu
-
-## 🔧 Architecture
-
-The application follows a modern React architecture with:
-- **Component-based UI** with reusable components
-- **Centralized state management** using Zustand stores
-- **Type-safe database operations** with Drizzle ORM
-- **Modular design** with clear separation of concerns
-
-## 🎨 Design Philosophy
-
-- **Accessibility-first** approach with WCAG 2.1 AA compliance
-- **Mobile-optimized** interface with touch-friendly controls
-- **Professional UI/UX** with familiar control patterns
-- **Real-time feedback** for immediate user response
-- **Gamified learning** to encourage continued practice
-
-## 📈 Recent Updates
-
-- Fixed critical hand preference functionality
-- Completely rebuilt settings system with full functionality
-- Added real-time preview for all visual settings
-- Implemented professional UI controls (sliders, switches, color pickers)
-- Restored optional tutorial system with "Start Here" badge
-- Optimized for mobile deployment
-
-## 🤝 Contributing
-
-This project is designed for one-handed typing accessibility and welcomes contributions that enhance the user experience for users with diverse typing needs.
-
-## 📄 License
-
-MIT License - See LICENSE file for details
+- Code is released under the [MIT License](LICENSE).
+- Third-party credits: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+- [Privacy policy](PRIVACY.md): the app collects no data and makes no network requests.

@@ -1,9 +1,11 @@
 import { create } from "zustand";
-import { subscribeWithSelector } from "zustand/middleware";
+import { subscribeWithSelector, persist, createJSONStorage } from "zustand/middleware";
 import type { Lesson } from "../lessons";
-// import { checkAchievements } from "../achievements";
+import { gamifiedCurriculum } from "../gamifiedCurriculum";
+import { checkAchievements as checkBasicAchievements } from "../achievements";
 import type { InternationalLayout, SpecializedLayoutType } from "../../lib/keyboardLayouts";
 import { 
+  specializedAchievements as specializedAchievementCatalog,
   checkAchievements as checkSpecializedAchievements,
   updateProgressMilestones,
   generateProgressInsights,
@@ -16,6 +18,26 @@ export type GameState = "ready" | "playing" | "paused" | "ended" | "lesson-selec
 export type HandPreference = "left" | "right";
 export type ViewMode = "portrait" | "landscape";
 export type ThemeMode = "light" | "dark";
+
+export interface LessonResult {
+  wpm: number;
+  accuracy: number;
+  errors: number;
+  timeMs: number;
+}
+
+export interface LessonProgressEntry {
+  bestWpm: number;
+  bestAccuracy: number;
+  bestTimeMs: number;
+  fewestErrors: number;
+  completions: number;
+  lastWpm: number;
+  lastAccuracy: number;
+  lastErrors: number;
+  lastTimeMs: number;
+  lastCompletedAt: number;
+}
 
 export interface KeyboardColorTheme {
   name: string;
@@ -188,6 +210,11 @@ interface TypingState {
   viewMode: ViewMode;
   themeMode: ThemeMode;
   
+  // Gamification
+  xp: number;
+  level: number;
+  customLayouts: unknown[];
+  
   // Missing properties needed by components
   currentWpm: number;
   currentStreak: number;
@@ -262,7 +289,7 @@ interface TypingState {
   
   // Progress tracking
   completedLessons: string[];
-  lessonProgress: Record<string, any>;
+  lessonProgress: Record<string, LessonProgressEntry>;
   currentProgress: {
     lessonId: string;
     position: number;
@@ -271,13 +298,9 @@ interface TypingState {
   } | null;
   customLessons: Lesson[];
   
-  // Ad system state
-  currentAdBreak: any | null;
-  totalAdRevenue: number;
-  adBreaksCompleted: Set<string>;
-  showAdBreak: boolean;
-
   // Actions
+  completeLesson: (lessonId: string, result: LessonResult) => void;
+  setCustomLayouts: (layouts: unknown[]) => void;
   setCurrentLesson: (lesson: Lesson) => void;
   setGameState: (state: GameState) => void;
   setShowTutorial: (show: boolean) => void;
@@ -301,11 +324,22 @@ interface TypingState {
   getPersonalStats: () => TypingStats;
   updateSpecializedProgress: () => void;
   getProgressSummary: () => any;
-  
-  // Ad system actions
-  setCurrentAdBreak: (adBreak: any) => void;
-  completeAdBreak: (revenue: number) => void;
-  setShowAdBreak: (show: boolean) => void;
+}
+
+const STORE_NAME = "onehandtype-store";
+const STORE_VERSION = 1;
+
+/** Level curve: level N needs 100 * (N-1)^2 total XP. */
+export function levelFromXp(xp: number): number {
+  return Math.floor(Math.sqrt(Math.max(0, xp) / 100)) + 1;
+}
+
+function findCurriculumLesson(lessonId: string) {
+  for (const level of gamifiedCurriculum) {
+    const found = level.lessons.find((l) => l.id === lessonId);
+    if (found) return found;
+  }
+  return undefined;
 }
 
 const defaultStats: TypingStats = {
@@ -359,15 +393,20 @@ const defaultAccessibilitySettings: AccessibilitySettings = {
 };
 
 export const useTypingStore = create<TypingState>()(
-  subscribeWithSelector((set, get) => ({
+  subscribeWithSelector(
+  persist((set, get) => ({
     // Initial state
     gameState: "ready",
     handPreference: "right",
     showTutorial: false,
     viewMode: "portrait",
-    themeMode: "light",
+    themeMode: "dark",
     keyboardLayout: "qwerty",
     selectedColorTheme: 0,
+    
+    xp: 0,
+    level: 1,
+    customLayouts: [],
     
     // Missing properties
     currentWpm: 0,
@@ -411,15 +450,8 @@ export const useTypingStore = create<TypingState>()(
     
     accessibilitySettings: defaultAccessibilitySettings,
     
-    // Ad system state
-    currentAdBreak: null,
-    totalAdRevenue: 0,
-    adBreaksCompleted: new Set(),
-    showAdBreak: false,
-    
     // Actions
     setCurrentLesson: (lesson: Lesson | null) => {
-      console.log('useTypingStore: setCurrentLesson called with:', lesson?.id);
       if (!lesson) {
         set({
           currentLesson: null,
@@ -469,6 +501,7 @@ export const useTypingStore = create<TypingState>()(
     setSoundEnabled: (enabled) => set((state) => ({
       accessibilitySettings: {
         ...state.accessibilitySettings,
+        soundEnabled: enabled,
         audioFeedback: enabled
       }
     })),
@@ -565,7 +598,7 @@ export const useTypingStore = create<TypingState>()(
     setReducedMotion: (reduced) => set((state) => ({
       accessibilitySettings: {
         ...state.accessibilitySettings,
-        reducedMotion: reduced
+        reduceMotion: reduced
       }
     })),
     setScreenReaderMode: (mode) => set((state) => ({
@@ -724,7 +757,7 @@ export const useTypingStore = create<TypingState>()(
       const newSpecializedAchievements = checkSpecializedAchievements(
         state.stats, 
         state.stats.layoutSpecificStats,
-        state.specializedAchievements.map(a => a.id)
+        state.unlockedAchievements
       );
       
       if (newSpecializedAchievements.length > 0) {
@@ -788,18 +821,91 @@ export const useTypingStore = create<TypingState>()(
       }));
     },
     
-    // Ad system actions
-    setCurrentAdBreak: (adBreak: any) => set({ currentAdBreak: adBreak }),
-    
-    completeAdBreak: (revenue: number) => {
-      set((state) => ({
-        currentAdBreak: null,
-        totalAdRevenue: state.totalAdRevenue + revenue,
-        showAdBreak: false
-      }));
+    setCustomLayouts: (layouts) => set({ customLayouts: layouts }),
+
+    completeLesson: (lessonId, result) => {
+      const state = get();
+      const wpm = Math.max(0, Math.round(result.wpm));
+      const accuracy = Math.min(100, Math.max(0, Math.round(result.accuracy)));
+      const errors = Math.max(0, Math.round(result.errors));
+      const timeMs = Math.max(0, Math.round(result.timeMs));
+      const timeMin = timeMs / 60000;
+      const alreadyCompleted = state.completedLessons.includes(lessonId);
+
+      // Per-lesson best
+      const prev = state.lessonProgress[lessonId];
+      const entry: LessonProgressEntry = {
+        bestWpm: Math.max(prev?.bestWpm ?? 0, wpm),
+        bestAccuracy: Math.max(prev?.bestAccuracy ?? 0, accuracy),
+        bestTimeMs: prev && prev.bestTimeMs > 0 ? Math.min(prev.bestTimeMs, timeMs || prev.bestTimeMs) : timeMs,
+        fewestErrors: prev ? Math.min(prev.fewestErrors, errors) : errors,
+        completions: (prev?.completions ?? 0) + 1,
+        lastWpm: wpm,
+        lastAccuracy: accuracy,
+        lastErrors: errors,
+        lastTimeMs: timeMs,
+        lastCompletedAt: Date.now()
+      };
+
+      // Aggregate stats (totalTimeTyped is in minutes)
+      const prevLesson = state.stats.lessons[lessonId];
+      const charsTyped = Math.max(1, Math.round(wpm * 5 * timeMin));
+      const newStats: TypingStats = {
+        ...state.stats,
+        totalCharactersTyped: state.stats.totalCharactersTyped + charsTyped,
+        totalErrors: state.stats.totalErrors + errors,
+        totalTimeTyped: state.stats.totalTimeTyped + timeMin,
+        bestWpm: Math.max(state.stats.bestWpm, wpm),
+        bestAccuracy: Math.max(state.stats.bestAccuracy, accuracy),
+        lessons: {
+          ...state.stats.lessons,
+          [lessonId]: {
+            attempts: (prevLesson?.attempts ?? 0) + 1,
+            completedCount: (prevLesson?.completedCount ?? 0) + 1,
+            bestWpm: Math.max(prevLesson?.bestWpm ?? 0, wpm),
+            bestAccuracy: Math.max(prevLesson?.bestAccuracy ?? 0, accuracy),
+            totalTime: (prevLesson?.totalTime ?? 0) + timeMin
+          }
+        }
+      };
+
+      // XP: curriculum reward when defined, otherwise a formula
+      const baseXp = findCurriculumLesson(lessonId)?.rewards.xp
+        ?? 10 + Math.round((state.currentLesson?.id === lessonId ? state.currentLesson.difficulty : 1) * 5);
+      const performanceBonus = Math.floor(wpm / 2) + (accuracy >= 100 ? 10 : accuracy >= 95 ? 5 : 0);
+      const earnedXp = (alreadyCompleted ? Math.floor(baseXp / 4) : baseXp) + performanceBonus;
+      const newXp = state.xp + earnedXp;
+
+      set({
+        completedLessons: alreadyCompleted ? state.completedLessons : [...state.completedLessons, lessonId],
+        lessonProgress: { ...state.lessonProgress, [lessonId]: entry },
+        stats: newStats,
+        personalStats: newStats,
+        xp: newXp,
+        level: levelFromXp(newXp),
+        wpm,
+        accuracy,
+        currentWpm: wpm
+      });
+
+      // Achievements: basic (ids only) and specialized (full objects)
+      const afterStats = get();
+      const newBasicIds = checkBasicAchievements(afterStats.stats, afterStats.unlockedAchievements);
+      const newSpecialized = checkSpecializedAchievements(
+        afterStats.stats,
+        afterStats.stats.layoutSpecificStats,
+        afterStats.unlockedAchievements
+      );
+      const newIds = Array.from(new Set([...newBasicIds, ...newSpecialized.map((a) => a.id)]))
+        .filter((id) => !afterStats.unlockedAchievements.includes(id));
+      if (newIds.length > 0 || newSpecialized.length > 0) {
+        set((prevState) => ({
+          unlockedAchievements: [...prevState.unlockedAchievements, ...newIds],
+          specializedAchievements: [...prevState.specializedAchievements, ...newSpecialized]
+        }));
+      }
+      get().updateSpecializedProgress();
     },
-    
-    setShowAdBreak: (show: boolean) => set({ showAdBreak: show }),
 
     // Layout-specific stats management
     updateLayoutSpecificStats: (layoutType, result) => {
@@ -912,5 +1018,49 @@ export const useTypingStore = create<TypingState>()(
         layoutStats: state.stats.layoutSpecificStats
       };
     }
-  }))
+  }),
+  {
+    name: STORE_NAME,
+    version: STORE_VERSION,
+    storage: createJSONStorage(() => localStorage),
+    // Persist only durable user data; transient game/session state is excluded.
+    partialize: (state) => ({
+      handPreference: state.handPreference,
+      themeMode: state.themeMode,
+      keyboardLayout: state.keyboardLayout,
+      selectedColorTheme: state.selectedColorTheme,
+      accessibilitySettings: state.accessibilitySettings,
+      stats: state.stats,
+      completedLessons: state.completedLessons,
+      lessonProgress: state.lessonProgress,
+      xp: state.xp,
+      level: state.level,
+      unlockedAchievements: state.unlockedAchievements,
+      customLessons: state.customLessons,
+      customLayouts: state.customLayouts
+    }),
+    migrate: (persistedState, _version) => persistedState as Partial<TypingState>,
+    // Rebuild derived/non-serializable state (achievement objects hold functions)
+    merge: (persistedState, currentState) => {
+      const persisted = (persistedState ?? {}) as Partial<TypingState>;
+      const stats: TypingStats = { ...defaultStats, ...(persisted.stats ?? {}) };
+      const unlocked = persisted.unlockedAchievements ?? [];
+      const layoutStats = stats.layoutSpecificStats || {};
+      return {
+        ...currentState,
+        ...persisted,
+        stats,
+        personalStats: stats,
+        accessibilitySettings: {
+          ...defaultAccessibilitySettings,
+          ...(persisted.accessibilitySettings ?? {})
+        },
+        specializedAchievements: specializedAchievementCatalog.filter((a) => unlocked.includes(a.id)),
+        progressMilestones: updateProgressMilestones(layoutStats),
+        progressInsights: generateProgressInsights(layoutStats),
+        overallProgress: calculateOverallProgress(layoutStats)
+      };
+    }
+  }
+  ))
 );

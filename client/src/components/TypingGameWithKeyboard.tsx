@@ -4,6 +4,7 @@ import { Card } from './ui/card.tsx';
 import { Progress } from './ui/progress.tsx';
 import { ArrowLeft, Target, Clock, Zap } from 'lucide-react';
 import { type Lesson } from '../lib/lessons';
+import { useTypingStore } from '../lib/stores/useTypingStore';
 
 interface TypingGameWithKeyboardProps {
   lesson: Lesson;
@@ -23,12 +24,19 @@ const KEYBOARD_LAYOUT = [
 export default function TypingGameWithKeyboard({ lesson, onBack, onComplete }: TypingGameWithKeyboardProps) {
   const [userInput, setUserInput] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [startTime, setStartTime] = useState<number | null>(null);
   const [wpm, setWpm] = useState(0);
   const [accuracy, setAccuracy] = useState(100);
   const [errors, setErrors] = useState(0);
+  const [completed, setCompleted] = useState(false);
   const [pressedKey, setPressedKey] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const completeLesson = useTypingStore((state) => state.completeLesson);
+
+  // Cumulative keystroke tracking so backspacing never erases mistakes
+  const startTimeRef = useRef<number | null>(null);
+  const totalKeystrokesRef = useRef(0);
+  const correctKeystrokesRef = useRef(0);
+  const completedRef = useRef(false);
 
   // Get lesson text from content or text field
   const currentText = lesson.content || lesson.text || lesson.title || "Practice typing";
@@ -41,45 +49,50 @@ export default function TypingGameWithKeyboard({ lesson, onBack, onComplete }: T
     }
   }, []);
 
-  useEffect(() => {
-    if (userInput.length > 0 && !startTime) {
-      setStartTime(Date.now());
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (completedRef.current) return;
+    const value = e.target.value;
+    if (value.length > currentText.length) return;
+
+    const now = Date.now();
+    if (startTimeRef.current === null && value.length > 0) {
+      startTimeRef.current = now;
     }
 
-    // Calculate WPM and accuracy
-    if (startTime && userInput.length > 0) {
-      const timeElapsed = (Date.now() - startTime) / 1000 / 60;
-      const wordsTyped = userInput.length / 5;
-      const currentWpm = Math.round(wordsTyped / timeElapsed) || 0;
-      setWpm(currentWpm);
-
-      let correctChars = 0;
-      let errorCount = 0;
-      for (let i = 0; i < userInput.length; i++) {
-        if (userInput[i] === currentText[i]) {
-          correctChars++;
-        } else {
-          errorCount++;
+    // Count newly typed characters (growth only; deletions are not keystrokes)
+    if (value.length > userInput.length) {
+      for (let i = userInput.length; i < value.length; i++) {
+        totalKeystrokesRef.current++;
+        if (value[i] === currentText[i]) {
+          correctKeystrokesRef.current++;
         }
       }
-      const currentAccuracy = userInput.length > 0 ? Math.round((correctChars / userInput.length) * 100) : 100;
-      setAccuracy(currentAccuracy);
-      setErrors(errorCount);
     }
 
-    // Check if lesson is complete
-    if (userInput === currentText) {
-      if (onComplete) {
-        setTimeout(() => onComplete(), 1000); // Small delay to show completion
-      }
-    }
-  }, [userInput, startTime, currentText, onComplete]);
+    const total = totalKeystrokesRef.current;
+    const correct = correctKeystrokesRef.current;
+    const errorCount = total - correct;
+    const timeMs = startTimeRef.current ? now - startTimeRef.current : 0;
+    const minutes = timeMs / 60000;
+    const liveWpm = minutes > 0 ? Math.round(value.length / 5 / minutes) : 0;
+    const liveAccuracy = total > 0 ? Math.round((correct / total) * 100) : 100;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    if (value.length <= currentText.length) {
-      setUserInput(value);
-      setCurrentIndex(value.length);
+    setUserInput(value);
+    setCurrentIndex(value.length);
+    setWpm(liveWpm);
+    setAccuracy(liveAccuracy);
+    setErrors(errorCount);
+
+    if (value === currentText) {
+      completedRef.current = true;
+      setCompleted(true);
+      completeLesson(lesson.id, {
+        wpm: liveWpm,
+        accuracy: liveAccuracy,
+        errors: errorCount,
+        timeMs
+      });
+      onComplete?.();
     }
   };
 
@@ -89,9 +102,13 @@ export default function TypingGameWithKeyboard({ lesson, onBack, onComplete }: T
   };
 
   const resetGame = () => {
+    startTimeRef.current = null;
+    totalKeystrokesRef.current = 0;
+    correctKeystrokesRef.current = 0;
+    completedRef.current = false;
+    setCompleted(false);
     setUserInput('');
     setCurrentIndex(0);
-    setStartTime(null);
     setWpm(0);
     setAccuracy(100);
     setErrors(0);
@@ -244,6 +261,7 @@ export default function TypingGameWithKeyboard({ lesson, onBack, onComplete }: T
               placeholder="Start typing here..."
               className="w-full h-24 p-4 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-lg resize-none"
               autoFocus
+              readOnly={completed}
             />
           </div>
 
@@ -276,7 +294,7 @@ export default function TypingGameWithKeyboard({ lesson, onBack, onComplete }: T
         </div>
 
         {/* Completion Message */}
-        {userInput === currentText && (
+        {completed && (
           <Card className="p-6 bg-green-900 border-green-600 text-center">
             <div className="text-3xl font-bold text-green-400 mb-2">🎉 Lesson Complete!</div>
             <div className="text-slate-300 mb-4">

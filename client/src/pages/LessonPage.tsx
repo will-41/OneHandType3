@@ -21,17 +21,10 @@ export default function LessonPage({ lesson, onBack }: LessonPageProps) {
     );
   }
 
-  const handleComplete = () => {
-    // Handle lesson completion logic here
-    // For now, just go back to home after completion
-    setTimeout(() => onBack(), 2000);
-  };
-
   return (
     <div className="min-h-screen bg-slate-900 text-white">
       <TypingGameWithKeyboard 
         lesson={lesson}
-        onComplete={handleComplete}
         onBack={onBack}
       />
     </div>
