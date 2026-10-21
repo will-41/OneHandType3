@@ -1,14 +1,34 @@
-import type { ReactNode } from 'react';
-import { Link } from 'wouter';
-import { Settings, Hand, ChevronRight } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { Link, useLocation } from 'wouter';
+import { Settings, Hand, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
 import { Switch } from '../components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import { Button } from '../components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
 import PageContainer from '../components/shell/PageContainer';
 import PageHeader from '../components/shell/PageHeader';
 import { cn } from '../lib/utils';
 import { useTypingStore, type HandPreference } from '../lib/stores/useTypingStore';
 import { availableLayouts } from '../lib/keyboardLayouts';
 import { mirrorRow } from '../lib/theme';
+import { isCustomLayoutId, type CustomKeyboardLayout, type LayoutId } from '../lib/customLayouts';
 
 const TAB_PREVIEW = ['Home', 'Learn', 'Practice', 'Stats', 'Settings'];
 const TEXT_SIZES = [
@@ -98,13 +118,25 @@ export default function SettingsPage() {
   const setFontSize = useTypingStore((s) => s.setFontSize);
   const setLargeText = useTypingStore((s) => s.setLargeText);
   const update = useTypingStore((s) => s.updateAccessibilitySettings);
+  const customLayouts = useTypingStore((s) => s.customLayouts);
+  const deleteCustomLayout = useTypingStore((s) => s.deleteCustomLayout);
+  const [, navigate] = useLocation();
+  const [pendingDelete, setPendingDelete] = useState<CustomKeyboardLayout | null>(null);
 
   const handOptions: { label: string; value: HandPreference }[] = [
     { label: 'Left hand', value: 'left' },
     { label: 'Right hand', value: 'right' },
   ];
 
-  const layoutName = availableLayouts.find((l) => l.id === keyboardLayout)?.name;
+  const activeCustom = customLayouts.find((l) => l.id === keyboardLayout);
+  const layoutName = activeCustom
+    ? `${activeCustom.name} (${activeCustom.hand} hand)`
+    : availableLayouts.find((l) => l.id === keyboardLayout)?.name;
+  const activeDescription = isCustomLayoutId(keyboardLayout)
+    ? activeCustom
+      ? 'Your custom layout, saved on this device.'
+      : undefined
+    : availableLayouts.find((l) => l.id === keyboardLayout)?.description;
 
   return (
     <PageContainer className="max-w-2xl">
@@ -137,7 +169,7 @@ export default function SettingsPage() {
           <label htmlFor="layout-select" className="block font-medium">
             Keyboard layout
           </label>
-          <Select value={keyboardLayout} onValueChange={(v) => setKeyboardLayout(v as typeof keyboardLayout)}>
+          <Select value={keyboardLayout} onValueChange={(v) => setKeyboardLayout(v as LayoutId)}>
             <SelectTrigger id="layout-select" className="min-h-[48px]" aria-label="Keyboard layout">
               <SelectValue placeholder={layoutName ?? 'Choose a layout'} />
             </SelectTrigger>
@@ -148,12 +180,50 @@ export default function SettingsPage() {
                   {l.specialized ? ' (one-hand)' : ''}
                 </SelectItem>
               ))}
+              {customLayouts.length > 0 && (
+                <SelectGroup>
+                  <SelectLabel>My layouts</SelectLabel>
+                  {customLayouts.map((l) => (
+                    <SelectItem key={l.id} value={l.id} className="min-h-[44px]">
+                      {l.name} ({l.hand} hand)
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              )}
             </SelectContent>
           </Select>
-          {availableLayouts.find((l) => l.id === keyboardLayout)?.description && (
-            <p className="text-sm text-muted-foreground">
-              {availableLayouts.find((l) => l.id === keyboardLayout)?.description}
-            </p>
+          {activeDescription && <p className="text-sm text-muted-foreground">{activeDescription}</p>}
+          <Button type="button" variant="outline" className="min-h-[48px] w-full gap-2" onClick={() => navigate('/settings/keyboard-builder')}>
+            <Plus className="h-4 w-4" aria-hidden="true" /> Create custom layout
+          </Button>
+          {customLayouts.length > 0 && (
+            <ul aria-label="My layouts" className="divide-y divide-border overflow-hidden rounded-lg border border-border">
+              {customLayouts.map((l) => (
+                <li key={l.id} className="flex items-center justify-between gap-2 py-1 pl-3 pr-1">
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">{l.name}</span>
+                    <span className="block text-xs text-muted-foreground">{l.hand === 'left' ? 'Left' : 'Right'} hand</span>
+                  </span>
+                  <span className="flex shrink-0">
+                    <Button asChild variant="ghost" size="icon" className="h-12 w-12">
+                      <Link href={`/settings/keyboard-builder/${l.id}`} aria-label={`Edit ${l.name}`}>
+                        <Pencil className="h-4 w-4" aria-hidden="true" />
+                      </Link>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-12 w-12 text-destructive"
+                      aria-label={`Delete ${l.name}`}
+                      onClick={() => setPendingDelete(l)}
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </span>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
 
@@ -226,6 +296,29 @@ export default function SettingsPage() {
           </Link>
         ))}
       </Group>
+
+      <AlertDialog open={pendingDelete !== null} onOpenChange={(o) => !o && setPendingDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this layout?</AlertDialogTitle>
+            <AlertDialogDescription>
+              &ldquo;{pendingDelete?.name}&rdquo; will be removed from this device. If it is your active layout, QWERTY is used instead.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="min-h-[48px]">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="min-h-[48px]"
+              onClick={() => {
+                if (pendingDelete) deleteCustomLayout(pendingDelete.id);
+                setPendingDelete(null);
+              }}
+            >
+              Delete layout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageContainer>
   );
 }

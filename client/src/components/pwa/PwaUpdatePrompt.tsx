@@ -16,14 +16,22 @@ export default function PwaUpdatePrompt() {
     setApplyUpdate(() => () => update(true));
   }, []);
 
+  // The offline-ready notice is informational: auto-dismiss so it never
+  // lingers. Update notices stay until the user acts on them.
+  useEffect(() => {
+    if (notice !== 'offline') return;
+    const timer = setTimeout(() => setNotice(null), 4000);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
   if (!notice) return null;
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-x-4 bottom-20 z-[100] mx-auto flex max-w-md items-center gap-3 rounded-xl border border-border bg-card p-3 text-foreground shadow-lg"
-      style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
+      className="fixed inset-x-4 top-3 z-[100] mx-auto flex max-w-md items-center gap-3 rounded-xl border border-border bg-card p-3 text-foreground shadow-lg"
+      style={{ marginTop: 'env(safe-area-inset-top)' }}
     >
       <p className="flex-1 text-sm">
         {notice === 'update' ? 'Update available' : 'Ready to work offline'}

@@ -1,9 +1,10 @@
-import { Route, Switch, useLocation, useRoute } from 'wouter';
+import { Route, Router, Switch, useLocation, useRoute } from 'wouter';
 import HomePage from './pages/HomePage';
 import CurriculumPage from './pages/CurriculumPage';
 import PracticePage from './pages/PracticePage';
 import StatsPage from './pages/StatsPage';
 import SettingsPage from './pages/SettingsPage';
+import KeyboardBuilderPage from './pages/KeyboardBuilderPage';
 import TutorialPage from './pages/TutorialPage';
 import AboutPage from './pages/AboutPage';
 import PrivacyPage from './pages/PrivacyPage';
@@ -60,6 +61,7 @@ export default function App() {
 
   return (
     <ErrorBoundary componentName="MainApp">
+      <Router base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <AppShell>
         <Switch>
           <Route path="/">{page('HomePage', <HomePage />)}</Route>
@@ -68,12 +70,16 @@ export default function App() {
           <Route path="/lesson/:id" component={LessonRoute} />
           <Route path="/stats">{page('StatsPage', <StatsPage />)}</Route>
           <Route path="/settings">{page('SettingsPage', <SettingsPage />)}</Route>
+          {/* Tab bar stays visible on the builder (AppShell only hides it on /lesson and /tutorial); Settings tab stays highlighted. */}
+          <Route path="/settings/keyboard-builder">{page('KeyboardBuilderPage', <KeyboardBuilderPage />)}</Route>
+          <Route path="/settings/keyboard-builder/:id">{page('KeyboardBuilderPage', <KeyboardBuilderPage />)}</Route>
           <Route path="/tutorial" component={TutorialRoute} />
           <Route path="/about">{page('AboutPage', <AboutPage />)}</Route>
           <Route path="/privacy">{page('PrivacyPage', <PrivacyPage />)}</Route>
           <Route component={NotFound} />
         </Switch>
       </AppShell>
+      </Router>
     </ErrorBoundary>
   );
 }

@@ -1,6 +1,7 @@
 import { 
   type InternationalLayout, 
   type SpecializedLayoutType,
+  type KeyboardLayout,
   isSpecializedLayout,
   getKeyboardLayout,
   availableLayouts
@@ -304,4 +305,60 @@ export function getMigrationGuidance(
       'Focus on muscle memory development'
     ]
   };
+}
+
+export const MAX_LAYOUT_ROWS = 6;
+export const MAX_ROW_KEYS = 10;
+
+function describeChar(ch: string): string {
+  return ch === ' ' ? 'Space' : `"${ch}"`;
+}
+
+/**
+ * Validates a user-designed layout. Errors block saving; warnings do not.
+ * Blank keys (`key: ''`) are allowed spacers. Space is supplied separately by
+ * the practice keyboard, so it is never required.
+ */
+export function validateCustomLayout(layout: KeyboardLayout): { errors: string[]; warnings: string[] } {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  if (layout.length === 0 || layout.every((row) => row.length === 0)) {
+    errors.push('The layout has no keys.');
+    return { errors, warnings };
+  }
+  if (layout.length > MAX_LAYOUT_ROWS) errors.push(`A layout can have at most ${MAX_LAYOUT_ROWS} rows.`);
+  if (layout.some((row) => row.length > MAX_ROW_KEYS)) {
+    errors.push(`A row can have at most ${MAX_ROW_KEYS} keys.`);
+  }
+
+  const seen = new Map<string, number>();
+  let blanks = 0;
+  for (const row of layout) {
+    for (const k of row) {
+      if (k.key === '') {
+        blanks += 1;
+        continue;
+      }
+      const norm = k.key.toLowerCase();
+      seen.set(norm, (seen.get(norm) ?? 0) + 1);
+    }
+  }
+  const dupes = [...seen.entries()].filter(([, n]) => n > 1).map(([ch]) => describeChar(ch));
+  if (dupes.length > 0) {
+    errors.push(`Duplicate characters: ${dupes.join(', ')}. Each character can appear on only one key.`);
+  }
+
+  const missing: string[] = [];
+  for (let c = 97; c <= 122; c += 1) {
+    const ch = String.fromCharCode(c);
+    if (!seen.has(ch)) missing.push(ch);
+  }
+  if (missing.length > 0) {
+    warnings.push(`Missing letters: ${missing.join(', ')} — you won't be able to type them.`);
+  }
+  if (blanks > 0) {
+    warnings.push(`${blanks} blank ${blanks === 1 ? 'key' : 'keys'} will do nothing when pressed.`);
+  }
+  return { errors, warnings };
 }

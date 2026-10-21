@@ -1,508 +1,429 @@
-import React, { useState } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import { Slider } from './ui/slider';
 import { Switch } from './ui/switch';
-import { Separator } from './ui/separator';
 import { cn } from '../lib/utils';
 import { useTypingStore } from '../lib/stores/useTypingStore';
-import { Lesson } from '../lib/lessons';
-import { Save, Download, Upload, Eye, RotateCcw, BookOpen, User, Target, Clock, Gauge } from 'lucide-react';
+import type { Lesson } from '../lib/lessons';
+import { Save, Download, Upload, Eye, Pencil, RotateCcw, BookOpen, X } from 'lucide-react';
 
 interface LessonBuilderProps {
+  /** Called after the lesson has been saved to the store. */
   onSave?: (lesson: Lesson) => void;
   onClose?: () => void;
   existingLesson?: Lesson;
   className?: string;
 }
 
-const LessonBuilder: React.FC<LessonBuilderProps> = ({
-  onSave,
-  onClose,
-  existingLesson,
-  className
-}) => {
-  const { themeMode } = useTypingStore();
-  
-  const [lesson, setLesson] = useState<Partial<Lesson>>({
-    id: existingLesson?.id || `custom-${Date.now()}`,
-    title: existingLesson?.title || '',
-    description: existingLesson?.description || '',
-    category: existingLesson?.category || 'basics',
-    level: existingLesson?.level || 1,
-    difficulty: existingLesson?.difficulty || 1,
-    content: existingLesson?.content || '',
-    targetWpm: existingLesson?.targetWpm || 15,
-    timeLimit: existingLesson?.timeLimit,
-    handCompatibility: existingLesson?.handCompatibility || ['left', 'right'],
-    focusKeys: existingLesson?.focusKeys || [],
-    prerequisites: existingLesson?.prerequisites || [],
-    wordCount: existingLesson?.wordCount || 0,
-    estimatedTime: existingLesson?.estimatedTime || 2
-  });
+type Category = 'basics' | 'words' | 'sentences' | 'advanced';
+const CATEGORIES: { id: Category; label: string }[] = [
+  { id: 'basics', label: 'Basics' },
+  { id: 'words', label: 'Words' },
+  { id: 'sentences', label: 'Sentences' },
+  { id: 'advanced', label: 'Advanced' },
+];
 
-  const [previewMode, setPreviewMode] = useState(false);
+interface Draft {
+  id: string;
+  title: string;
+  description: string;
+  category: Category;
+  difficulty: number;
+  content: string;
+  targetWpm: number;
+  hands: ('left' | 'right')[];
+  focusKeys: string[];
+}
+
+export const CUSTOM_LESSON_PREFIX = 'custom-lesson-';
+
+function newLessonId(): string {
+  return `${CUSTOM_LESSON_PREFIX}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+}
+
+function blankDraft(): Draft {
+  return {
+    id: newLessonId(),
+    title: '',
+    description: '',
+    category: 'basics',
+    difficulty: 1,
+    content: '',
+    targetWpm: 15,
+    hands: ['left', 'right'],
+    focusKeys: [],
+  };
+}
+
+function fromLesson(l: Lesson): Draft {
+  return {
+    id: l.id,
+    title: l.title,
+    description: l.description,
+    category: (CATEGORIES.some((c) => c.id === l.category) ? l.category : 'basics') as Category,
+    difficulty: l.difficulty,
+    content: l.content,
+    targetWpm: l.targetWpm,
+    hands: l.handCompatibility.length > 0 ? l.handCompatibility : ['left', 'right'],
+    focusKeys: l.focusKeys ?? [],
+  };
+}
+
+const wordsOf = (text: string) => text.trim().split(/\s+/).filter(Boolean).length;
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/** Strictly parses an exported lesson file; always assigns a fresh id. */
+function parseImportedLesson(text: string): Draft | string {
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return 'That file is not valid JSON.';
+  }
+  if (!isObj(data)) return 'That file is not a lesson.';
+  const { title, description, content } = data;
+  if (typeof title !== 'string' || typeof description !== 'string' || typeof content !== 'string') {
+    return 'That file is missing a title, description or content.';
+  }
+  if (content.length > 5000) return 'The lesson text is too long.';
+  const category = CATEGORIES.find((c) => c.id === data.category)?.id ?? 'basics';
+  const clampNum = (v: unknown, min: number, max: number, fallback: number) =>
+    typeof v === 'number' && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.round(v))) : fallback;
+  const hands = Array.isArray(data.handCompatibility)
+    ? (data.handCompatibility.filter((h) => h === 'left' || h === 'right') as ('left' | 'right')[])
+    : (['left', 'right'] as ('left' | 'right')[]);
+  const focus = Array.isArray(data.focusKeys)
+    ? data.focusKeys.filter((k): k is string => typeof k === 'string' && k.length > 0 && k.length <= 12).slice(0, 20)
+    : [];
+  return {
+    id: newLessonId(),
+    title: title.slice(0, 80),
+    description: description.slice(0, 300),
+    category,
+    difficulty: clampNum(data.difficulty, 1, 5, 1),
+    content,
+    targetWpm: clampNum(data.targetWpm, 5, 100, 15),
+    hands: hands.length > 0 ? hands : ['left', 'right'],
+    focusKeys: focus,
+  };
+}
+
+export default function LessonBuilder({ onSave, onClose, existingLesson, className }: LessonBuilderProps) {
+  const addCustomLesson = useTypingStore((s) => s.addCustomLesson);
+  const removeCustomLesson = useTypingStore((s) => s.removeCustomLesson);
+  const [lesson, setLesson] = useState<Draft>(() => (existingLesson ? fromLesson(existingLesson) : blankDraft()));
+  const [preview, setPreview] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [notice, setNotice] = useState('');
+  const [focusInput, setFocusInput] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const validateLesson = (): boolean => {
-    const newErrors: Record<string, string> = {};
+  const update = <K extends keyof Draft>(field: K, value: Draft[K]) => {
+    setLesson((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: '' } : prev));
+  };
 
-    if (!lesson.title?.trim()) {
-      newErrors.title = 'Title is required';
-    }
-    if (!lesson.description?.trim()) {
-      newErrors.description = 'Description is required';
-    }
-    if (!lesson.content?.trim()) {
-      newErrors.content = 'Lesson content is required';
-    }
-    if (lesson.content && lesson.content.length < 5) {
-      newErrors.content = 'Content must be at least 5 characters long';
-    }
+  const validate = (): boolean => {
+    const next: Record<string, string> = {};
+    if (!lesson.title.trim()) next.title = 'Title is required';
+    if (!lesson.description.trim()) next.description = 'Description is required';
+    if (!lesson.content.trim()) next.content = 'Lesson text is required';
+    else if (lesson.content.trim().length < 5) next.content = 'Lesson text must be at least 5 characters';
+    if (lesson.hands.length === 0) next.hands = 'Pick at least one hand';
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const toLesson = (): Lesson => {
+    const content = lesson.content.trim();
+    return {
+      id: lesson.id,
+      title: lesson.title.trim(),
+      description: lesson.description.trim(),
+      category: lesson.category,
+      level: 1,
+      difficulty: lesson.difficulty,
+      content,
+      text: content,
+      targetWpm: lesson.targetWpm,
+      handCompatibility: lesson.hands,
+      focusKeys: lesson.focusKeys,
+      wordCount: wordsOf(content),
+      estimatedMinutes: Math.max(1, Math.ceil(content.length / 50)),
+    };
   };
 
   const handleSave = () => {
-    if (!validateLesson()) return;
-
-    const finalLesson: Lesson = {
-      ...lesson,
-      id: lesson.id!,
-      title: lesson.title!,
-      description: lesson.description!,
-      category: lesson.category as "basics" | "words" | "sentences" | "advanced",
-      level: lesson.level!,
-      difficulty: lesson.difficulty!,
-      content: lesson.content!,
-      text: lesson.content!, // Alias for backward compatibility
-      targetWpm: lesson.targetWpm!,
-      handCompatibility: lesson.handCompatibility as ("left" | "right")[],
-      wordCount: lesson.content!.split(' ').length,
-      estimatedTime: Math.max(1, Math.ceil(lesson.content!.length / 50))
-    };
-
+    if (!validate()) return;
+    const finalLesson = toLesson();
+    if (existingLesson) removeCustomLesson(existingLesson.id);
+    addCustomLesson(finalLesson);
     onSave?.(finalLesson);
   };
 
   const handleExport = () => {
-    if (!validateLesson()) return;
-
-    const dataStr = JSON.stringify(lesson, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
+    if (!validate()) return;
+    const blob = new Blob([JSON.stringify(toLesson(), null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `lesson-${lesson.title?.replace(/\s+/g, '-').toLowerCase()}.json`;
+    link.download = `lesson-${lesson.title.trim().replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.json`;
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setNotice('Lesson exported.');
   };
 
-  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    event.target.value = '';
     if (!file) return;
-
     const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const importedLesson = JSON.parse(e.target?.result as string);
-        setLesson(importedLesson);
-      } catch (error) {
-        alert('Invalid lesson file format');
+    reader.onerror = () => setNotice('Could not read that file.');
+    reader.onload = () => {
+      const result = parseImportedLesson(String(reader.result ?? ''));
+      if (typeof result === 'string') {
+        setNotice(result);
+        return;
       }
+      setLesson(result);
+      setErrors({});
+      setNotice('Lesson imported. Review it, then save.');
     };
     reader.readAsText(file);
   };
 
-  const resetLesson = () => {
-    setLesson({
-      id: `custom-${Date.now()}`,
-      title: '',
-      description: '',
-      category: 'basics',
-      level: 1,
-      difficulty: 1,
-      content: '',
-      targetWpm: 15,
-      handCompatibility: ['left', 'right'],
-      focusKeys: [],
-      prerequisites: [],
-      wordCount: 0,
-      estimatedTime: 2
-    });
-    setErrors({});
+  const addFocusKey = () => {
+    const k = focusInput.trim();
+    if (k && !lesson.focusKeys.includes(k) && lesson.focusKeys.length < 20) update('focusKeys', [...lesson.focusKeys, k]);
+    setFocusInput('');
   };
 
-  const updateLesson = (field: keyof Lesson, value: string | number | string[] | boolean | undefined) => {
-    setLesson(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
+  const toggleHand = (hand: 'left' | 'right', on: boolean) =>
+    update('hands', on ? [...lesson.hands.filter((h) => h !== hand), hand] : lesson.hands.filter((h) => h !== hand));
 
-  const addFocusKey = (key: string) => {
-    if (key && !lesson.focusKeys?.includes(key)) {
-      updateLesson('focusKeys', [...(lesson.focusKeys || []), key]);
-    }
-  };
-
-  const removeFocusKey = (key: string) => {
-    updateLesson('focusKeys', lesson.focusKeys?.filter(k => k !== key) || []);
-  };
+  const words = wordsOf(lesson.content);
+  const field = (name: string) => (errors[name] ? 'border-destructive' : '');
+  const errorText = (name: string) =>
+    errors[name] ? (
+      <p id={`lb-${name}-err`} role="alert" className="mt-1 text-xs text-destructive">
+        {errors[name]}
+      </p>
+    ) : null;
 
   return (
-    <div className={cn(
-      "w-full max-w-4xl mx-auto space-y-6 p-6",
-      themeMode === 'dark' ? 'text-white' : 'text-black',
-      className
-    )}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className={cn('w-full space-y-4', className)}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <BookOpen className="h-6 w-6" />
-            Custom Lesson Builder
-          </h2>
-          <p className="text-sm opacity-75 mt-1">
-            Create personalized typing lessons for students and therapy sessions
-          </p>
+          <h3 className="flex items-center gap-2 text-lg font-semibold">
+            <BookOpen className="h-5 w-5" aria-hidden="true" />
+            {existingLesson ? 'Edit lesson' : 'New lesson'}
+          </h3>
+          <p className="text-sm text-muted-foreground">Write your own text to practice.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPreviewMode(!previewMode)}
-            className="gap-2"
-          >
-            <Eye className="h-4 w-4" />
-            {previewMode ? 'Edit' : 'Preview'}
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" className="min-h-[48px] gap-2" onClick={() => setPreview((p) => !p)}>
+            {preview ? <Pencil className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+            {preview ? 'Edit' : 'Preview'}
           </Button>
           {onClose && (
-            <Button variant="outline" size="sm" onClick={onClose}>
-              Close
+            <Button type="button" variant="ghost" className="min-h-[48px] gap-2" onClick={onClose}>
+              <X className="h-4 w-4" aria-hidden="true" /> Close
             </Button>
           )}
         </div>
       </div>
 
-      {previewMode ? (
-        /* Preview Mode */
-        <Card className={`p-6 ${themeMode === 'dark' ? 'bg-slate-800 border-slate-600' : 'bg-white border-gray-200'}`}>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold">{lesson.title || 'Untitled Lesson'}</h3>
-              <div className="flex gap-2">
-                <Badge variant="outline">{lesson.category}</Badge>
-                <Badge variant="secondary">Level {lesson.level}</Badge>
-                <Badge variant="outline">Difficulty {lesson.difficulty}/5</Badge>
-              </div>
+      {preview ? (
+        <Card className="space-y-3 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <h4 className="text-lg font-bold">{lesson.title || 'Untitled lesson'}</h4>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline">{lesson.category}</Badge>
+              <Badge variant="outline">Difficulty {lesson.difficulty}/5</Badge>
             </div>
-            <p className="opacity-75">{lesson.description || 'No description provided'}</p>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                <span>{lesson.targetWpm} WPM</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>{lesson.estimatedTime} min</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                <span>{lesson.handCompatibility?.join(', ')} hand</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Gauge className="h-4 w-4" />
-                <span>{lesson.content?.split(' ').length || 0} words</span>
-              </div>
-            </div>
-
-            <div className={`p-4 rounded-lg border-2 ${themeMode === 'dark' ? 'bg-slate-700 border-slate-500' : 'bg-gray-50 border-gray-300'}`}>
-              <h4 className="font-semibold mb-2">Lesson Content:</h4>
-              <p className="font-mono text-lg leading-relaxed">
-                {lesson.content || 'No content provided'}
-              </p>
-            </div>
-
-            {lesson.focusKeys && lesson.focusKeys.length > 0 && (
-              <div>
-                <h4 className="font-semibold mb-2">Focus Keys:</h4>
-                <div className="flex flex-wrap gap-2">
-                  {lesson.focusKeys.map(key => (
-                    <Badge key={key} variant="outline" className="font-mono">
-                      {key}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
+          <p className="text-sm text-muted-foreground">{lesson.description || 'No description yet.'}</p>
+          <p className="text-sm text-muted-foreground">
+            {lesson.targetWpm} WPM &middot; {words} words &middot; {lesson.hands.join(' & ') || 'no'} hand
+          </p>
+          <p className="rounded-lg border border-border bg-muted/40 p-3 font-mono text-base leading-relaxed">
+            {lesson.content || 'No text yet.'}
+          </p>
         </Card>
       ) : (
-        /* Edit Mode */
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Basic Information */}
-          <Card className={`p-6 ${themeMode === 'dark' ? 'bg-slate-800 border-slate-600' : 'bg-white border-gray-200'}`}>
-            <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="title">Lesson Title *</Label>
-                <Input
-                  id="title"
-                  value={lesson.title || ''}
-                  onChange={(e) => updateLesson('title', e.target.value)}
-                  placeholder="e.g., Introduction to Home Row Keys"
-                  className={errors.title ? 'border-red-500' : ''}
-                />
-                {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
-              </div>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="lb-title">Title</Label>
+            <Input
+              id="lb-title"
+              value={lesson.title}
+              maxLength={80}
+              onChange={(e) => update('title', e.target.value)}
+              placeholder="e.g. My home row warm-up"
+              className={cn('h-12', field('title'))}
+              aria-invalid={Boolean(errors.title)}
+              aria-describedby={errors.title ? 'lb-title-err' : undefined}
+            />
+            {errorText('title')}
+          </div>
+          <div>
+            <Label htmlFor="lb-description">Description</Label>
+            <Textarea
+              id="lb-description"
+              value={lesson.description}
+              maxLength={300}
+              onChange={(e) => update('description', e.target.value)}
+              placeholder="What is this lesson for?"
+              className={cn('min-h-20', field('description'))}
+              aria-invalid={Boolean(errors.description)}
+              aria-describedby={errors.description ? 'lb-description-err' : undefined}
+            />
+            {errorText('description')}
+          </div>
+          <div>
+            <Label htmlFor="lb-content">Text to type</Label>
+            <Textarea
+              id="lb-content"
+              value={lesson.content}
+              maxLength={5000}
+              onChange={(e) => update('content', e.target.value)}
+              placeholder="Type the text you want to practice..."
+              className={cn('min-h-32 font-mono', field('content'))}
+              aria-invalid={Boolean(errors.content)}
+              aria-describedby={errors.content ? 'lb-content-err' : undefined}
+            />
+            {errorText('content')}
+            <p className="mt-1 text-xs text-muted-foreground">
+              {lesson.content.length} characters &middot; {words} words
+            </p>
+          </div>
 
-              <div>
-                <Label htmlFor="description">Description *</Label>
-                <Textarea
-                  id="description"
-                  value={lesson.description || ''}
-                  onChange={(e) => updateLesson('description', e.target.value)}
-                  placeholder="Describe what this lesson teaches and its goals..."
-                  className={cn("min-h-20", errors.description ? 'border-red-500' : '')}
-                />
-                {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Select value={lesson.category} onValueChange={(value) => updateLesson('category', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="basics">Basics</SelectItem>
-                      <SelectItem value="words">Words</SelectItem>
-                      <SelectItem value="sentences">Sentences</SelectItem>
-                      <SelectItem value="advanced">Advanced</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="level">Level</Label>
-                  <Input
-                    id="level"
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={lesson.level || 1}
-                    onChange={(e) => updateLesson('level', parseInt(e.target.value) || 1)}
-                  />
-                </div>
-              </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="lb-category">Category</Label>
+              <select
+                id="lb-category"
+                value={lesson.category}
+                onChange={(e) => update('category', e.target.value as Category)}
+                className="mt-1 h-12 w-full rounded-md border border-input bg-background px-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
             </div>
-          </Card>
-
-          {/* Performance Settings */}
-          <Card className={`p-6 ${themeMode === 'dark' ? 'bg-slate-800 border-slate-600' : 'bg-white border-gray-200'}`}>
-            <h3 className="text-lg font-semibold mb-4">Performance Settings</h3>
-            <div className="space-y-4">
-              <div>
-                <Label>Difficulty Level: {lesson.difficulty}/5</Label>
-                <Slider
-                  value={[lesson.difficulty || 1]}
-                  onValueChange={(value) => updateLesson('difficulty', value[0])}
-                  max={5}
-                  min={1}
-                  step={1}
-                  className="mt-2"
-                />
-              </div>
-
-              <div>
-                <Label>Target WPM: {lesson.targetWpm}</Label>
-                <Slider
-                  value={[lesson.targetWpm || 15]}
-                  onValueChange={(value) => updateLesson('targetWpm', value[0])}
-                  max={100}
-                  min={5}
-                  step={5}
-                  className="mt-2"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="timeLimit">Time Limit (optional, in seconds)</Label>
-                <Input
-                  id="timeLimit"
-                  type="number"
-                  min="30"
-                  value={lesson.timeLimit || ''}
-                  onChange={(e) => updateLesson('timeLimit', e.target.value ? parseInt(e.target.value) : undefined)}
-                  placeholder="Leave empty for no time limit"
-                />
-              </div>
-
-              <div>
-                <Label>Hand Compatibility</Label>
-                <div className="flex gap-4 mt-2">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="left-hand"
-                      checked={lesson.handCompatibility?.includes('left') || false}
-                      onCheckedChange={(checked) => {
-                        const current = lesson.handCompatibility || [];
-                        if (checked) {
-                          updateLesson('handCompatibility', [...current.filter(h => h !== 'left'), 'left']);
-                        } else {
-                          updateLesson('handCompatibility', current.filter(h => h !== 'left'));
-                        }
-                      }}
-                    />
-                    <Label htmlFor="left-hand">Left Hand</Label>
+            <div>
+              <Label id="lb-hands">Works with</Label>
+              <div className="mt-1 flex gap-4" role="group" aria-labelledby="lb-hands">
+                {(['left', 'right'] as const).map((h) => (
+                  <div key={h} className="flex min-h-[48px] items-center gap-2">
+                    <Switch id={`lb-${h}`} checked={lesson.hands.includes(h)} onCheckedChange={(on) => toggleHand(h, on)} />
+                    <Label htmlFor={`lb-${h}`}>{h === 'left' ? 'Left hand' : 'Right hand'}</Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="right-hand"
-                      checked={lesson.handCompatibility?.includes('right') || false}
-                      onCheckedChange={(checked) => {
-                        const current = lesson.handCompatibility || [];
-                        if (checked) {
-                          updateLesson('handCompatibility', [...current.filter(h => h !== 'right'), 'right']);
-                        } else {
-                          updateLesson('handCompatibility', current.filter(h => h !== 'right'));
-                        }
-                      }}
-                    />
-                    <Label htmlFor="right-hand">Right Hand</Label>
-                  </div>
-                </div>
+                ))}
               </div>
+              {errorText('hands')}
             </div>
-          </Card>
+          </div>
 
-          {/* Lesson Content */}
-          <Card className={`p-6 lg:col-span-2 ${themeMode === 'dark' ? 'bg-slate-800 border-slate-600' : 'bg-white border-gray-200'}`}>
-            <h3 className="text-lg font-semibold mb-4">Lesson Content</h3>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="content">Text Content *</Label>
-                <Textarea
-                  id="content"
-                  value={lesson.content || ''}
-                  onChange={(e) => {
-                    updateLesson('content', e.target.value);
-                    updateLesson('wordCount', e.target.value.split(' ').length);
-                    updateLesson('estimatedTime', Math.max(1, Math.ceil(e.target.value.length / 50)));
-                  }}
-                  placeholder="Type the text that students will practice typing..."
-                  className={cn("min-h-32 font-mono", errors.content ? 'border-red-500' : '')}
-                />
-                {errors.content && <p className="text-red-500 text-xs mt-1">{errors.content}</p>}
-                <div className="flex justify-between text-xs opacity-60 mt-1">
-                  <span>{lesson.content?.length || 0} characters</span>
-                  <span>{lesson.content?.split(' ').length || 0} words</span>
-                  <span>~{Math.max(1, Math.ceil((lesson.content?.length || 0) / 50))} min estimated</span>
-                </div>
-              </div>
+          <div>
+            <Label htmlFor="lb-difficulty">Difficulty: {lesson.difficulty}/5</Label>
+            <Slider
+              id="lb-difficulty"
+              aria-label="Difficulty"
+              value={[lesson.difficulty]}
+              onValueChange={(v) => update('difficulty', v[0])}
+              min={1}
+              max={5}
+              step={1}
+              className="py-3"
+            />
+          </div>
+          <div>
+            <Label htmlFor="lb-wpm">Target speed: {lesson.targetWpm} WPM</Label>
+            <Slider
+              id="lb-wpm"
+              aria-label="Target words per minute"
+              value={[lesson.targetWpm]}
+              onValueChange={(v) => update('targetWpm', v[0])}
+              min={5}
+              max={100}
+              step={5}
+              className="py-3"
+            />
+          </div>
 
-              <div>
-                <Label htmlFor="focus-keys">Focus Keys (optional)</Label>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    id="focus-keys"
-                    placeholder="Enter key (e.g., 'a', 'space', 'shift')"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        addFocusKey(e.currentTarget.value);
-                        e.currentTarget.value = '';
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      const input = document.getElementById('focus-keys') as HTMLInputElement;
-                      if (input.value) {
-                        addFocusKey(input.value);
-                        input.value = '';
-                      }
-                    }}
-                  >
-                    Add
-                  </Button>
-                </div>
-                {lesson.focusKeys && lesson.focusKeys.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {lesson.focusKeys.map(key => (
-                      <Badge
-                        key={key}
-                        variant="outline"
-                        className="cursor-pointer font-mono"
-                        onClick={() => removeFocusKey(key)}
-                      >
-                        {key} ×
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
+          <div>
+            <Label htmlFor="lb-focus">Focus keys (optional)</Label>
+            <div className="mt-1 flex gap-2">
+              <Input
+                id="lb-focus"
+                value={focusInput}
+                maxLength={12}
+                onChange={(e) => setFocusInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addFocusKey();
+                  }
+                }}
+                placeholder="e.g. f"
+                className="h-12"
+              />
+              <Button type="button" variant="outline" className="min-h-[48px]" onClick={addFocusKey}>
+                Add
+              </Button>
             </div>
-          </Card>
+            {lesson.focusKeys.length > 0 && (
+              <ul className="mt-2 flex flex-wrap gap-2" aria-label="Focus keys">
+                {lesson.focusKeys.map((k) => (
+                  <li key={k}>
+                    <button
+                      type="button"
+                      aria-label={`Remove focus key ${k}`}
+                      onClick={() => update('focusKeys', lesson.focusKeys.filter((x) => x !== k))}
+                      className="flex min-h-[44px] items-center gap-1 rounded-md border border-border bg-muted px-3 font-mono text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {k} <X className="h-3 w-3" aria-hidden="true" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       )}
 
-      <Separator />
+      {notice && (
+        <p role="status" className="text-sm text-muted-foreground">
+          {notice}
+        </p>
+      )}
 
-      {/* Action Buttons */}
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={resetLesson} className="gap-2">
-            <RotateCcw className="h-4 w-4" />
-            Reset
-          </Button>
-          <Button variant="outline" onClick={handleExport} className="gap-2">
-            <Download className="h-4 w-4" />
-            Export
-          </Button>
-          <div>
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              style={{ display: 'none' }}
-              id="import-lesson"
-            />
-            <Button
-              variant="outline"
-              onClick={() => document.getElementById('import-lesson')?.click()}
-              className="gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              Import
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          {onClose && (
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-          )}
-          <Button onClick={handleSave} className="gap-2">
-            <Save className="h-4 w-4" />
-            Save Lesson
-          </Button>
-        </div>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" className="min-h-[48px] flex-1 gap-2" onClick={handleSave}>
+          <Save className="h-4 w-4" aria-hidden="true" /> Save lesson
+        </Button>
+        <Button type="button" variant="outline" className="min-h-[48px] gap-2" onClick={() => { setLesson(existingLesson ? fromLesson(existingLesson) : blankDraft()); setErrors({}); setNotice(''); }}>
+          <RotateCcw className="h-4 w-4" aria-hidden="true" /> Reset
+        </Button>
+        <Button type="button" variant="outline" className="min-h-[48px] gap-2" onClick={handleExport}>
+          <Download className="h-4 w-4" aria-hidden="true" /> Export
+        </Button>
+        <input ref={fileRef} type="file" accept="application/json,.json" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={handleImport} />
+        <Button type="button" variant="outline" className="min-h-[48px] gap-2" onClick={() => fileRef.current?.click()}>
+          <Upload className="h-4 w-4" aria-hidden="true" /> Import
+        </Button>
       </div>
     </div>
   );
-};
-
-export default LessonBuilder;
+}
