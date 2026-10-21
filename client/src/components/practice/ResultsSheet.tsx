@@ -24,6 +24,8 @@ interface ResultsSheetProps {
   onAgain: () => void;
   onNext: () => void;
   onDone: () => void;
+  /** Escape key: close the sheet without choosing an action. */
+  onDismiss: () => void;
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -48,12 +50,45 @@ export default function ResultsSheet({
   onAgain,
   onNext,
   onDone,
+  onDismiss,
 }: ResultsSheetProps) {
   const primaryRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     primaryRef.current?.focus();
   }, []);
+
+  // Escape closes the sheet from anywhere on the page.
+  const dismissRef = useRef(onDismiss);
+  dismissRef.current = onDismiss;
+  useEffect(() => {
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') dismissRef.current();
+    };
+    document.addEventListener('keydown', onEsc);
+    return () => document.removeEventListener('keydown', onEsc);
+  }, []);
+
+  // Focus trap.
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== 'Tab') return;
+    const items = sheetRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])');
+    if (!items || items.length === 0) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey && active === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    } else if (!sheetRef.current?.contains(active)) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
 
   const badgeText = data.badge === 'new-best' ? 'New best!' : data.badge === 'first-clear' ? 'First clear!' : null;
 
@@ -65,6 +100,8 @@ export default function ResultsSheet({
       transition={{ duration: reduceMotion ? 0.12 : 0.2 }}
     >
       <motion.section
+        ref={sheetRef}
+        onKeyDown={onKeyDown}
         role="dialog"
         aria-modal="true"
         aria-labelledby="results-title"

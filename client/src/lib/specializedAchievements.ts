@@ -316,8 +316,8 @@ export function checkAchievements(
       if (achievement.condition(generalStats, layoutSpecificStats)) {
         newAchievements.push(achievement);
       }
-    } catch (error) {
-      console.warn(`Error checking achievement ${achievement.id}:`, error);
+    } catch {
+      // A broken condition must never block lesson completion; treat as not met.
     }
   }
 

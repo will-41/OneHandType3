@@ -17,18 +17,18 @@ const CREDITS: { name: string; note: string }[] = [
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+    <div className="text-foreground">
       <article className="mx-auto max-w-prose px-4 py-8 leading-relaxed sm:py-12">
         <Link
           href="/settings"
-          className="mb-8 inline-flex min-h-[48px] items-center gap-2 rounded-md text-blue-700 underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 dark:text-blue-300"
+          className="mb-8 inline-flex min-h-[48px] items-center gap-2 rounded-md text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           Back to Settings
         </Link>
 
         <h1 className="mb-2 text-3xl font-bold tracking-tight">About {APP_NAME}</h1>
-        <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+        <p className="mb-6 text-sm text-muted-foreground">
           Version {APP_VERSION}
         </p>
 
@@ -43,7 +43,7 @@ export default function AboutPage() {
           No ads, no tracking, everything stays on your device. Read the{" "}
           <Link
             href="/privacy"
-            className="text-blue-700 underline underline-offset-4 dark:text-blue-300"
+            className="text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             privacy policy
           </Link>
@@ -62,6 +62,6 @@ export default function AboutPage() {
           ))}
         </ul>
       </article>
-    </main>
+    </div>
   );
 }

@@ -73,6 +73,7 @@ export default function PracticeScreen({ lessonId, title, text: rawText, targetW
   const [flash, setFlash] = useState<{ ch: string; n: number } | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const mainRef = useRef<HTMLDivElement>(null);
+  const restartRef = useRef<HTMLButtonElement>(null);
 
   const handleComplete = useCallback(
     (r: SessionResult) => {
@@ -86,12 +87,7 @@ export default function PracticeScreen({ lessonId, title, text: rawText, targetW
       const after = useTypingStore.getState();
       const unlocked = after.unlockedAchievements
         .filter((id) => !achievementsBefore.has(id))
-        .map(
-          (id) =>
-            getAchievementById(id)?.title ??
-            after.specializedAchievements.find((a) => a.id === id)?.name ??
-            humanizeId(id),
-        );
+        .map((id) => getAchievementById(id)?.title ?? humanizeId(id));
 
       playCompletionChime();
       haptic('success');
@@ -144,6 +140,12 @@ export default function PracticeScreen({ lessonId, title, text: rawText, targetW
     setResults(null);
     setAnnouncement('');
   }, [session]);
+
+  // Escape closes the results sheet; focus moves to the restart control once the page is active again.
+  const dismissResults = useCallback(() => {
+    setResults(null);
+    window.setTimeout(() => restartRef.current?.focus(), 0);
+  }, []);
 
   // Physical keyboard -> same handlers (latest-ref pattern keeps one listener).
   const latest = useRef({ onChar, onBackspace, expected, done });
@@ -234,7 +236,7 @@ export default function PracticeScreen({ lessonId, title, text: rawText, targetW
             <button type="button" onClick={onBack} aria-label="Back" className={iconBtn}>
               <ArrowLeft aria-hidden="true" className="h-5 w-5" />
             </button>
-            <button type="button" onClick={restart} aria-label="Restart lesson" className={iconBtn}>
+            <button ref={restartRef} type="button" onClick={restart} aria-label="Restart lesson" className={iconBtn}>
               <RotateCcw aria-hidden="true" className="h-5 w-5" />
             </button>
           </div>
@@ -264,14 +266,14 @@ export default function PracticeScreen({ lessonId, title, text: rawText, targetW
         </div>
 
         {/* Text */}
-        <main className="flex min-h-0 flex-1 flex-col justify-center px-4 py-2">
+        <section aria-label="Typing area" className="flex min-h-0 flex-1 flex-col justify-center px-4 py-2">
           <p className="sr-only">Lesson text: {text.replace(/\n/g, ' ')}</p>
           <TextDisplay text={text} typed={typed} reduceMotion={reduceMotion} />
           <p className="mt-2 h-5 text-center text-xs text-muted-foreground" aria-hidden="true">
             {status === 'idle' && 'Start typing to begin. The timer starts on your first key.'}
             {status === 'paused' && 'Paused. Keep typing to resume.'}
           </p>
-        </main>
+        </section>
 
         {/* Keyboard: bottom thumb zone */}
         <div className="shrink-0 border-t border-border bg-card/70 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur">
@@ -304,6 +306,7 @@ export default function PracticeScreen({ lessonId, title, text: rawText, targetW
           onAgain={restart}
           onNext={() => nextLesson && onNext?.(nextLesson.id)}
           onDone={onBack}
+          onDismiss={dismissResults}
         />
       )}
     </div>

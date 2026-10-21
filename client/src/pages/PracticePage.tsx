@@ -88,7 +88,7 @@ export default function PracticePage() {
                               {lesson.estimatedMinutes} min
                             </span>
                           ) : null}
-                          <span className={note.ok ? 'flex items-center gap-1' : 'flex items-center gap-1 text-accent'}>
+                          <span className={note.ok ? 'flex items-center gap-1' : 'flex items-center gap-1 font-medium text-foreground'}>
                             <Hand className="h-3.5 w-3.5" aria-hidden="true" />
                             {note.text}
                           </span>

@@ -1,71 +1,54 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, type ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
   componentName?: string;
 }
 
 interface State {
   hasError: boolean;
-  error: Error | null;
 }
 
 /**
- * Error Boundary component to prevent app crashes
- * Catches JavaScript errors anywhere in child component tree
+ * Keeps a crash in one screen from taking down the whole app and shows a
+ * friendly, accessible fallback with a way to recover. Nothing is logged or
+ * sent anywhere: the app is fully local and has no error-reporting service.
  */
 class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null,
-  };
+  public state: State = { hasError: false };
 
-  public static getDerivedStateFromError(error: Error): State {
-    // Update state so the next render will show the fallback UI
-    return { hasError: true, error };
-  }
-
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error(`Error in ${this.props.componentName || 'component'}:`, error);
-    console.error('Component stack trace:', errorInfo.componentStack);
-    
-    // Report error to error tracking service if needed
-    if (this.props.onError) {
-      this.props.onError(error, errorInfo);
-    }
+  public static getDerivedStateFromError(): State {
+    return { hasError: true };
   }
 
   public render(): ReactNode {
-    if (this.state.hasError) {
-      // Custom fallback UI
-      if (this.props.fallback) {
-        return this.props.fallback;
-      }
+    if (!this.state.hasError) return this.props.children;
+    if (this.props.fallback) return this.props.fallback;
 
-      // Default fallback UI
-      return (
-        <div className="p-4 m-4 bg-red-50 border border-red-300 rounded-md text-red-800">
-          <h2 className="text-lg font-semibold mb-2">Something went wrong</h2>
-          <details className="mb-4">
-            <summary className="cursor-pointer text-sm text-red-600">Error details</summary>
-            <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-auto max-h-40">
-              {this.state.error?.toString()}
-            </pre>
-          </details>
+    return (
+      <div role="alert" className="mx-auto flex min-h-[60vh] max-w-sm flex-col items-center justify-center gap-4 px-6 text-center">
+        <h1 className="text-2xl font-bold text-foreground">Something went wrong</h1>
+        <p className="text-muted-foreground">
+          This screen hit a problem. Your progress is saved on this device. Try again, or head back home.
+        </p>
+        <div className="flex w-full flex-col gap-2">
           <button
-            className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
-            onClick={() => window.location.reload()}
+            type="button"
+            className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-primary px-5 font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            onClick={() => this.setState({ hasError: false })}
           >
-            Reload Page
+            Try again
           </button>
+          <a
+            href={import.meta.env.BASE_URL}
+            className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-border px-5 font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            Go home
+          </a>
         </div>
-      );
-    }
-
-    // If no error occurred, render children normally
-    return this.props.children;
+      </div>
+    );
   }
 }
 

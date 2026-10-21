@@ -118,12 +118,13 @@ export default function RealmLessonNavigator({ onStartLesson, className }: Realm
                 aria-expanded={expanded}
                 aria-controls={panelId}
                 aria-disabled={!unlocked}
-                aria-label={`${level.storyTheme.region}, level ${levelIndex + 1}, ${progress}% complete${
-                  unlocked ? '' : ', locked: finish the previous realm first'
-                }`}
                 onClick={() => unlocked && setSelectedLevel(expanded ? null : level.id)}
               >
                 <CardHeader className="pb-3">
+                  <span className="sr-only">
+                    {unlocked ? '' : 'Locked. '}
+                    {`Level ${levelIndex + 1}. ${progress}% complete.`}
+                  </span>
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                       <span

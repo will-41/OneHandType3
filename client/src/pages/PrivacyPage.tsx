@@ -14,7 +14,7 @@ const SECTIONS: { heading: string; body: string[] }[] = [
   {
     heading: "What stays on your device",
     body: [
-      "Your progress (levels, scores, streaks), settings, custom layouts, and custom lessons are saved in your browser's local storage on your own device. Only you can access them. We cannot see them.",
+      "Your progress (levels, scores, achievements), settings, custom layouts, and custom lessons are saved in your browser's local storage on your own device. Only you can access them. We cannot see them.",
     ],
   },
   {
@@ -56,18 +56,18 @@ const SUMMARY = [
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+    <div className="text-foreground">
       <article className="mx-auto max-w-prose px-4 py-8 leading-relaxed sm:py-12">
         <Link
           href="/settings"
-          className="mb-8 inline-flex min-h-[48px] items-center gap-2 rounded-md text-blue-700 underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 dark:text-blue-300"
+          className="mb-8 inline-flex min-h-[48px] items-center gap-2 rounded-md text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           Back to Settings
         </Link>
 
         <h1 className="mb-2 text-3xl font-bold tracking-tight">Privacy Policy</h1>
-        <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+        <p className="mb-6 text-sm text-muted-foreground">
           Effective date: {EFFECTIVE_DATE}
         </p>
         <p className="mb-6">
@@ -97,7 +97,7 @@ export default function PrivacyPage() {
             Questions? Email{" "}
             <a
               href={`mailto:${CONTACT_EMAIL}`}
-              className="text-blue-700 underline underline-offset-4 dark:text-blue-300"
+              className="text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {CONTACT_EMAIL}
             </a>
@@ -105,6 +105,6 @@ export default function PrivacyPage() {
           </p>
         </section>
       </article>
-    </main>
+    </div>
   );
 }

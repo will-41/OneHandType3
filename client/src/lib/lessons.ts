@@ -330,21 +330,8 @@ export const staticLessons: Lesson[] = [
   },
 ];
 
-// Dynamic lessons array that will be populated from API
-export let lessons: Lesson[] = staticLessons; // Initialize with static lessons as fallback
-
-// Function to update lessons from API
-export function setLessons(newLessons: Lesson[]) {
-  if (newLessons && newLessons.length > 0) {
-    lessons.length = 0;
-    lessons.push(...newLessons);
-    console.log(`🔄 Updated global lessons array with ${newLessons.length} lessons from database`);
-    console.log('📋 First database lesson:', newLessons[0]);
-  } else {
-    console.log('⚠️ No lessons provided to setLessons, keeping current array');
-    console.log('📋 Current lessons count:', lessons.length);
-  }
-}
+// Bundled lessons (the app is local-first; there is no remote source).
+export const lessons: Lesson[] = staticLessons;
 
 // Helper functions that work with the dynamic lessons array
 export function getLessonById(id: string): Lesson | undefined {

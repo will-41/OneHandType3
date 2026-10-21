@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from 'react';
 import { useLocation } from 'wouter';
-import { BarChart3, Gauge, Target, CheckCircle2, Sparkles, Clock } from 'lucide-react';
+import { BarChart3, Gauge, Target, CheckCircle2, Sparkles, Clock, Trophy, Lock, ChevronDown } from 'lucide-react';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Progress } from '../components/ui/progress';
@@ -9,6 +9,7 @@ import PageHeader from '../components/shell/PageHeader';
 import { useTypingStore, levelFromXp } from '../lib/stores/useTypingStore';
 import { gamifiedCurriculum } from '../lib/gamifiedCurriculum';
 import { staticLessons } from '../lib/lessons';
+import { achievements, achievementCategoryLabels } from '../lib/achievements';
 
 
 const lessonTitles = new Map<string, string>([
@@ -37,6 +38,11 @@ export default function StatsPage() {
   const completedLessons = useTypingStore((s) => s.completedLessons);
 
   const xp = useTypingStore((s) => s.xp);
+  const unlockedIds = useTypingStore((s) => s.unlockedAchievements);
+  const achievementDates = useTypingStore((s) => s.achievementDates);
+  const unlockedSet = useMemo(() => new Set(unlockedIds), [unlockedIds]);
+  const unlockedList = achievements.filter((a) => unlockedSet.has(a.id));
+  const lockedList = achievements.filter((a) => !unlockedSet.has(a.id));
   const level = levelFromXp(xp);
   // Level N starts at 100 * (N-1)^2 XP (matches levelFromXp in the store).
   const levelStart = 100 * (level - 1) ** 2;
@@ -44,7 +50,7 @@ export default function StatsPage() {
   const xpIntoLevel = xp - levelStart;
   const xpForLevel = levelEnd - levelStart;
 
-  // TODO(wave-reconcile): store keeps no per-run history/timestamps; show per-lesson bests until it does.
+  // Per-lesson bests (the store keeps bests, not a full run history).
   const lessonBests = useMemo(
     () =>
       Object.entries(stats.lessons)
@@ -96,6 +102,70 @@ export default function StatsPage() {
           {levelEnd - xp} XP to level {level + 1}. Earn XP by completing lessons, with bonuses for speed and accuracy.
         </p>
       </Card>
+
+      <section aria-labelledby="stats-achievements" className="mt-8">
+        <h2 id="stats-achievements" className="mb-1 flex items-center gap-2 text-lg font-semibold">
+          <Trophy className="h-5 w-5 text-primary" aria-hidden="true" />
+          Achievements
+          <span className="text-sm font-normal text-muted-foreground">
+            {unlockedList.length} of {achievements.length}
+          </span>
+        </h2>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Earned through practice, accuracy and progress. No timers, no daily streaks, nothing to lose.
+        </p>
+
+        {unlockedList.length === 0 ? (
+          <p className="mb-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+            Your first achievement is one lesson away.
+          </p>
+        ) : (
+          <ul className="mb-3 space-y-2" aria-label="Unlocked achievements">
+            {unlockedList.map((a) => {
+              const when = achievementDates[a.id];
+              return (
+                <li key={a.id} className="flex items-start gap-3 rounded-xl border border-primary/40 bg-card p-3">
+                  <span aria-hidden="true" className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                    <Trophy className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="font-medium">{a.title}</div>
+                    <div className="text-sm text-muted-foreground">{a.description}</div>
+                    {when && (
+                      <div className="mt-0.5 text-xs text-muted-foreground">
+                        Unlocked <time dateTime={new Date(when).toISOString()}>{new Date(when).toLocaleDateString()}</time>
+                      </div>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {lockedList.length > 0 && (
+          <details className="group rounded-xl border border-border bg-card">
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-4 py-2 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+              <span>Still to explore ({lockedList.length})</span>
+              <ChevronDown aria-hidden="true" className="h-4 w-4 transition-transform group-open:rotate-180" />
+            </summary>
+            <ul className="space-y-1 border-t border-border p-2" aria-label="Locked achievements">
+              {lockedList.map((a) => (
+                <li key={a.id} className="flex items-start gap-3 rounded-lg px-2 py-2">
+                  <Lock aria-hidden="true" className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-muted-foreground">
+                      {a.title} <span className="sr-only">(locked)</span>
+                      <span className="ml-1 text-xs font-normal">· {achievementCategoryLabels[a.category]}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">{a.requirement}</div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+      </section>
 
       <section aria-labelledby="stats-recent" className="mt-8">
         <h2 id="stats-recent" className="mb-3 text-lg font-semibold">

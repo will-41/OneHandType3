@@ -1,18 +1,22 @@
 import { Route, Router, Switch, useLocation, useRoute } from 'wouter';
+import { lazy, Suspense } from 'react';
 import HomePage from './pages/HomePage';
-import CurriculumPage from './pages/CurriculumPage';
-import PracticePage from './pages/PracticePage';
-import StatsPage from './pages/StatsPage';
-import SettingsPage from './pages/SettingsPage';
-import KeyboardBuilderPage from './pages/KeyboardBuilderPage';
-import TutorialPage from './pages/TutorialPage';
-import AboutPage from './pages/AboutPage';
-import PrivacyPage from './pages/PrivacyPage';
-import NotFound from './pages/not-found';
+
+// Home loads eagerly (first screen); every other route is split into its
+// own chunk so the initial download stays small on phones.
+const CurriculumPage = lazy(() => import('./pages/CurriculumPage'));
+const PracticePage = lazy(() => import('./pages/PracticePage'));
+const StatsPage = lazy(() => import('./pages/StatsPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const KeyboardBuilderPage = lazy(() => import('./pages/KeyboardBuilderPage'));
+const TutorialPage = lazy(() => import('./pages/TutorialPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const NotFound = lazy(() => import('./pages/not-found'));
 import { useDataLoader } from './hooks/useDataLoader';
 import { gamifiedCurriculum } from './lib/gamifiedCurriculum';
 import ErrorBoundary from './components/ErrorBoundary';
-import LessonRenderer from './components/LessonRenderer';
+const LessonRenderer = lazy(() => import('./components/LessonRenderer'));
 import AppShell from './components/shell/AppShell';
 import { useDocumentTheme } from './lib/theme';
 
@@ -43,11 +47,15 @@ function LessonRoute() {
   );
 }
 
+const FIRST_LESSON_ID = gamifiedCurriculum[0]?.lessons[0]?.id ?? 'lesson-1-1';
+
 function TutorialRoute() {
   const [, navigate] = useLocation();
   return (
     <ErrorBoundary componentName="TutorialPage">
-      <TutorialPage onComplete={() => navigate('/')} />
+      <TutorialPage
+        onFinish={(dest) => navigate(dest === 'lesson' ? `/lesson/${FIRST_LESSON_ID}` : '/', { replace: true })}
+      />
     </ErrorBoundary>
   );
 }
@@ -63,6 +71,7 @@ export default function App() {
     <ErrorBoundary componentName="MainApp">
       <Router base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <AppShell>
+        <Suspense fallback={<div className="min-h-[50vh]" aria-busy="true" />}>
         <Switch>
           <Route path="/">{page('HomePage', <HomePage />)}</Route>
           <Route path="/curriculum">{page('CurriculumPage', <CurriculumPage />)}</Route>
@@ -78,6 +87,7 @@ export default function App() {
           <Route path="/privacy">{page('PrivacyPage', <PrivacyPage />)}</Route>
           <Route component={NotFound} />
         </Switch>
+        </Suspense>
       </AppShell>
       </Router>
     </ErrorBoundary>

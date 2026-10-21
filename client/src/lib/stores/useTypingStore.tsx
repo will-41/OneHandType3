@@ -3,11 +3,9 @@ import type { CustomKeyboardLayout, LayoutId } from '../customLayouts';
 import { subscribeWithSelector, persist, createJSONStorage } from "zustand/middleware";
 import type { Lesson } from "../lessons";
 import { gamifiedCurriculum } from "../gamifiedCurriculum";
-import { checkAchievements as checkBasicAchievements } from "../achievements";
+import { evaluateAchievements, type RecentResult } from "../achievements";
 import type { InternationalLayout, SpecializedLayoutType } from "../../lib/keyboardLayouts";
 import { 
-  specializedAchievements as specializedAchievementCatalog,
-  checkAchievements as checkSpecializedAchievements,
   updateProgressMilestones,
   generateProgressInsights,
   calculateOverallProgress,
@@ -222,7 +220,6 @@ interface TypingState {
   timeElapsed: number;
   
   // New settings actions
-  setHandPreference: (hand: HandPreference) => void;
   setThemeMode: (theme: ThemeMode) => void;
   setSoundEnabled: (enabled: boolean) => void;
   setBackgroundMusicEnabled: (enabled: boolean) => void;
@@ -270,6 +267,12 @@ interface TypingState {
   // Progress and achievements
   stats: TypingStats;
   unlockedAchievements: string[];
+  /** Unlock time (ms since epoch) per achievement id. */
+  achievementDates: Record<string, number>;
+  /** Last 20 finished runs, newest last (drives accuracy/pace achievements). */
+  recentResults: RecentResult[];
+  /** True once the intro tour was finished or skipped. */
+  onboardingComplete: boolean;
   personalStats: TypingStats; // Exposed for components
   specializedAchievements: Achievement[];
   progressMilestones: ProgressMilestone[];
@@ -301,6 +304,8 @@ interface TypingState {
   
   // Actions
   completeLesson: (lessonId: string, result: LessonResult) => void;
+  setOnboardingComplete: (done: boolean) => void;
+  setHandPreference: (hand: HandPreference) => void;
   setCustomLayouts: (layouts: CustomKeyboardLayout[]) => void;
   saveCustomLayout: (layout: CustomKeyboardLayout) => void;
   deleteCustomLayout: (id: CustomKeyboardLayout['id']) => void;
@@ -433,6 +438,9 @@ export const useTypingStore = create<TypingState>()(
     stats: defaultStats,
     personalStats: defaultStats,
     unlockedAchievements: [],
+    achievementDates: {},
+    recentResults: [],
+    onboardingComplete: false,
     specializedAchievements: [],
     progressMilestones: [],
     progressInsights: {
@@ -755,24 +763,6 @@ export const useTypingStore = create<TypingState>()(
         personalStats: newStats 
       });
       
-      // Check for new specialized achievements
-      const state = get();
-      const newSpecializedAchievements = checkSpecializedAchievements(
-        state.stats, 
-        state.stats.layoutSpecificStats,
-        state.unlockedAchievements
-      );
-      
-      if (newSpecializedAchievements.length > 0) {
-        set((prevState) => ({
-          specializedAchievements: [...prevState.specializedAchievements, ...newSpecializedAchievements],
-          unlockedAchievements: [...prevState.unlockedAchievements, ...newSpecializedAchievements.map(a => a.id)]
-        }));
-        
-        // Update progress after achievement check
-        get().updateSpecializedProgress();
-      }
-      
       // End lesson if complete
       if (result.isComplete) {
         set({ gameState: "ended" });
@@ -904,24 +894,35 @@ export const useTypingStore = create<TypingState>()(
         currentWpm: wpm
       });
 
-      // Achievements: basic (ids only) and specialized (full objects)
+      // Achievements (paced: see lib/achievements.ts)
       const afterStats = get();
-      const newBasicIds = checkBasicAchievements(afterStats.stats, afterStats.unlockedAchievements);
-      const newSpecialized = checkSpecializedAchievements(
-        afterStats.stats,
-        afterStats.stats.layoutSpecificStats,
+      const recentResults: RecentResult[] = [...afterStats.recentResults, { lessonId, wpm, accuracy }].slice(-20);
+      const newIds = evaluateAchievements(
+        {
+          completedLessons: afterStats.completedLessons,
+          totalMinutes: afterStats.stats.totalTimeTyped,
+          lessonCompletions: Object.fromEntries(
+            Object.entries(afterStats.lessonProgress).map(([id, e]) => [id, e.completions])
+          ),
+          recent: recentResults,
+          keyboardLayout: afterStats.keyboardLayout,
+          customLayoutIds: afterStats.customLayouts.map((l) => l.id),
+        },
         afterStats.unlockedAchievements
       );
-      const newIds = Array.from(new Set([...newBasicIds, ...newSpecialized.map((a) => a.id)]))
-        .filter((id) => !afterStats.unlockedAchievements.includes(id));
-      if (newIds.length > 0 || newSpecialized.length > 0) {
-        set((prevState) => ({
-          unlockedAchievements: [...prevState.unlockedAchievements, ...newIds],
-          specializedAchievements: [...prevState.specializedAchievements, ...newSpecialized]
-        }));
-      }
+      const now = Date.now();
+      set((prevState) => ({
+        recentResults,
+        unlockedAchievements: [...prevState.unlockedAchievements, ...newIds],
+        achievementDates: {
+          ...prevState.achievementDates,
+          ...Object.fromEntries(newIds.map((id) => [id, now]))
+        }
+      }));
       get().updateSpecializedProgress();
     },
+
+    setOnboardingComplete: (done) => set({ onboardingComplete: done }),
 
     // Layout-specific stats management
     updateLayoutSpecificStats: (layoutType, result) => {
@@ -1052,6 +1053,9 @@ export const useTypingStore = create<TypingState>()(
       xp: state.xp,
       level: state.level,
       unlockedAchievements: state.unlockedAchievements,
+      achievementDates: state.achievementDates,
+      recentResults: state.recentResults,
+      onboardingComplete: state.onboardingComplete,
       customLessons: state.customLessons,
       customLayouts: state.customLayouts
     }),
@@ -1060,7 +1064,6 @@ export const useTypingStore = create<TypingState>()(
     merge: (persistedState, currentState) => {
       const persisted = (persistedState ?? {}) as Partial<TypingState>;
       const stats: TypingStats = { ...defaultStats, ...(persisted.stats ?? {}) };
-      const unlocked = persisted.unlockedAchievements ?? [];
       const layoutStats = stats.layoutSpecificStats || {};
       return {
         ...currentState,
@@ -1071,7 +1074,7 @@ export const useTypingStore = create<TypingState>()(
           ...defaultAccessibilitySettings,
           ...(persisted.accessibilitySettings ?? {})
         },
-        specializedAchievements: specializedAchievementCatalog.filter((a) => unlocked.includes(a.id)),
+        specializedAchievements: [],
         progressMilestones: updateProgressMilestones(layoutStats),
         progressInsights: generateProgressInsights(layoutStats),
         overallProgress: calculateOverallProgress(layoutStats)
