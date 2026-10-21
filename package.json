@@ -9,9 +9,14 @@
     "preview": "vite preview",
     "check": "tsc",
     "icons": "node scripts/generate-icons.mjs",
-    "build:pages": "BASE_PATH=/OneHandType3/ vite build"
+    "build:pages": "BASE_PATH=/OneHandType3/ vite build",
+    "cap:sync": "npm run build && npx cap sync android",
+    "android:icons": "node scripts/android-icons.mjs",
+    "store:screenshots": "node e2e/store-screenshots.mjs http://localhost:4173"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
     "@fontsource/inter": "^5.2.5",
     "@radix-ui/react-accordion": "^1.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.2",
@@ -65,6 +70,8 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@capacitor/cli": "^8.5.3",
     "@playwright/test": "^1.64.1",
     "@tailwindcss/typography": "^0.5.15",
     "@types/node": "20.16.11",

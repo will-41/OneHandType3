@@ -68,3 +68,14 @@ project-analysis.md
 
 # Binary and cache files
 *.bin
+
+# Android signing material - NEVER commit
+*.jks
+*.keystore
+keystore.properties
+android/local.properties
+android/app/release/
+android/**/build/
+android/.gradle/
+*.aab
+*.apk
