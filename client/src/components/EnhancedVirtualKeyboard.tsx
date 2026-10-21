@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { resolveLayout } from '../lib/customLayouts';
 import { cn } from '../lib/utils';
 import { useTypingStore } from '../lib/stores/useTypingStore';
 import { 
@@ -242,7 +243,7 @@ const EnhancedVirtualKeyboard: React.FC<EnhancedVirtualKeyboardProps> = ({
   currentPosition = 0,
   errors = []
 }) => {
-  const { handPreference, themeMode, keyboardLayout } = useTypingStore();
+  const { handPreference, themeMode, keyboardLayout, customLayouts } = useTypingStore();
   const [pressedKeys, setPressedKeys] = useState<Set<string>>(new Set());
   const [showFingerGuide, setShowFingerGuide] = useState(true);
   const [displayMode, setDisplayMode] = useState<'standard' | 'compact'>('standard');
@@ -318,7 +319,7 @@ const EnhancedVirtualKeyboard: React.FC<EnhancedVirtualKeyboardProps> = ({
   // Get the appropriate keyboard layout
   const getKeyboardLayoutData = (): KeyData[] => {
     try {
-      const layoutKeys = getKeyboardLayout(handPreference, keyboardLayout);
+      const layoutKeys = resolveLayout(handPreference, keyboardLayout, customLayouts);
       return convertToKeyData(layoutKeys, isSpecializedLayout(keyboardLayout));
     } catch (error) {
       console.warn('Error getting keyboard layout, falling back to default:', error);

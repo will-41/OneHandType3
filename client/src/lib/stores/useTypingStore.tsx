@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { CustomKeyboardLayout, LayoutId } from '../customLayouts';
 import { subscribeWithSelector, persist, createJSONStorage } from "zustand/middleware";
 import type { Lesson } from "../lessons";
 import { gamifiedCurriculum } from "../gamifiedCurriculum";
@@ -213,7 +214,7 @@ interface TypingState {
   // Gamification
   xp: number;
   level: number;
-  customLayouts: unknown[];
+  customLayouts: CustomKeyboardLayout[];
   
   // Missing properties needed by components
   currentWpm: number;
@@ -246,7 +247,7 @@ interface TypingState {
   setFontSize: (size: number) => void;
   setLineHeight: (height: number) => void;
   setCustomTheme: (theme: any) => void;
-  keyboardLayout: InternationalLayout | SpecializedLayoutType;
+  keyboardLayout: LayoutId;
   selectedColorTheme: number;
   
   // Current lesson
@@ -300,14 +301,16 @@ interface TypingState {
   
   // Actions
   completeLesson: (lessonId: string, result: LessonResult) => void;
-  setCustomLayouts: (layouts: unknown[]) => void;
+  setCustomLayouts: (layouts: CustomKeyboardLayout[]) => void;
+  saveCustomLayout: (layout: CustomKeyboardLayout) => void;
+  deleteCustomLayout: (id: CustomKeyboardLayout['id']) => void;
   setCurrentLesson: (lesson: Lesson) => void;
   setGameState: (state: GameState) => void;
   setShowTutorial: (show: boolean) => void;
   toggleHandPreference: () => void;
   toggleThemeMode: () => void;
   setViewMode: (mode: ViewMode) => void;
-  setKeyboardLayout: (layout: InternationalLayout | SpecializedLayoutType) => void;
+  setKeyboardLayout: (layout: LayoutId) => void;
   setColorTheme: (themeIndex: number) => void;
   startLesson: () => void;
   pauseLesson: () => void;
@@ -320,7 +323,7 @@ interface TypingState {
   goBackToMainMenu: () => void;
   addCustomLesson: (lesson: Lesson) => void;
   removeCustomLesson: (lessonId: string) => void;
-  updateLayoutSpecificStats: (layoutType: InternationalLayout | SpecializedLayoutType, result: any) => void;
+  updateLayoutSpecificStats: (layoutType: LayoutId, result: any) => void;
   getPersonalStats: () => TypingStats;
   updateSpecializedProgress: () => void;
   getProgressSummary: () => any;
@@ -822,6 +825,19 @@ export const useTypingStore = create<TypingState>()(
     },
     
     setCustomLayouts: (layouts) => set({ customLayouts: layouts }),
+    saveCustomLayout: (layout) => set((state) => {
+      const exists = state.customLayouts.some((l) => l.id === layout.id);
+      return {
+        customLayouts: exists
+          ? state.customLayouts.map((l) => (l.id === layout.id ? layout : l))
+          : [...state.customLayouts, layout],
+      };
+    }),
+    deleteCustomLayout: (id) => set((state) => ({
+      customLayouts: state.customLayouts.filter((l) => l.id !== id),
+      // If the active layout is deleted, fall back to QWERTY.
+      keyboardLayout: state.keyboardLayout === id ? 'qwerty' : state.keyboardLayout,
+    })),
 
     completeLesson: (lessonId, result) => {
       const state = get();
