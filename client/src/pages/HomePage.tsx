@@ -4,16 +4,7 @@ import { Card } from '../components/ui/card.tsx';
 import { Badge } from '../components/ui/badge.tsx';
 import { Play, BookOpen, Target, Clock, Zap, Crown, RefreshCw } from 'lucide-react';
 import { gamifiedCurriculum } from '../lib/gamifiedCurriculum';
-
-interface Lesson {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  difficulty: number;
-  targetWpm: number;
-  estimatedMinutes: number;
-}
+import type { Lesson } from '../lib/lessons';
 
 interface HomePageProps {
   onNavigateToLesson: (lessonId: string) => void;
@@ -23,31 +14,22 @@ interface HomePageProps {
 
 export default function HomePage({ onNavigateToLesson, onNavigateToTutorial, lessons }: HomePageProps) {
   const handleStartLesson = (lessonId: string) => {
-    console.log('🎯 HomePage handleStartLesson called with:', lessonId);
 
     if (!lessonId) {
-      console.error('❌ No lessonId provided');
       return;
     }
 
     // Find the lesson to ensure it exists
     const lesson = lessons.find(l => l.id === lessonId);
     if (!lesson) {
-      console.error('❌ Lesson not found:', lessonId);
       alert('Lesson not found. Please refresh the page and try again.');
       return;
     }
-
-    console.log('✅ Starting lesson:', lesson.title);
     onNavigateToLesson(lessonId);
   };
 
   const basicLessons = lessons.filter(lesson => lesson.category === 'basics').slice(0, 6);
   const wordLessons = lessons.filter(lesson => lesson.category === 'words').slice(0, 3);
-
-  console.log('🏠 HomePage - Total lessons:', lessons.length);
-  console.log('🏠 HomePage - Basic lessons:', basicLessons.length);
-  console.log('🏠 HomePage - Word lessons:', wordLessons.length);
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
@@ -231,7 +213,6 @@ export default function HomePage({ onNavigateToLesson, onNavigateToTutorial, les
             <div className="flex items-center gap-3 mb-6">
               <Crown className="h-6 w-6 text-purple-400" />
               <h2 className="text-2xl font-bold">Realm of Keys Academy</h2>
-              <Badge variant="secondary" className="bg-purple-900 text-purple-300">Premium</Badge>
             </div>
 
             <div>
@@ -251,10 +232,8 @@ export default function HomePage({ onNavigateToLesson, onNavigateToTutorial, les
                       if (gamifiedCurriculum && gamifiedCurriculum.length > 0 && 
                           gamifiedCurriculum[0].lessons && gamifiedCurriculum[0].lessons.length > 0) {
                         const firstLesson = gamifiedCurriculum[0].lessons[0];
-                        console.log('📚 Starting Realm of Keys lesson:', firstLesson.id);
                         onNavigateToLesson(firstLesson.id);
                       } else {
-                        console.error('❌ Realm of Keys curriculum not loaded properly');
                         alert('Realm of Keys curriculum could not be loaded. Please try again later.');
                       }
                     }}

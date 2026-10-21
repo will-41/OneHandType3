@@ -23,7 +23,7 @@ export const staticLessons: Lesson[] = [
   {
     id: "basics-1",
     title: "Index Finger - F",
-    description: "Train your index finger with the F key - GATEKEEPER VALIDATED",
+    description: "Train your index finger with the F key",
     category: "basics",
     level: 1,
     difficulty: 1,

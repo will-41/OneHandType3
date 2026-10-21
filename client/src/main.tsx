@@ -6,17 +6,14 @@ import './index.css';
 
 // Simple error logging
 window.addEventListener('error', (e) => {
-  console.error('🚨 App Error:', e.error?.message || e.message);
 });
 
 window.addEventListener('unhandledrejection', (e) => {
-  console.error('🚨 Promise Rejection:', e.reason);
 });
 
 const root = document.getElementById('root');
 
 if (root) {
-  console.log('✅ OneType Starting...');
   const reactRoot = createRoot(root);
   
   reactRoot.render(
@@ -25,7 +22,6 @@ if (root) {
     </StrictMode>
   );
 } else {
-  console.error('🚨 CRITICAL: Root element not found');
   document.body.innerHTML = `
     <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #1e293b; color: white; font-family: system-ui;">
       <div style="text-align: center;">

@@ -61,7 +61,7 @@ export class TypingEngine {
   private layoutType: InternationalLayout | SpecializedLayoutType = 'qwerty';
   private handPreference: 'left' | 'right' = 'right';
   private activeChordKeys: Set<string> = new Set();
-  private chordTimeout: NodeJS.Timeout | null = null;
+  private chordTimeout: ReturnType<typeof setTimeout> | null = null;
   private chordCombinations: number = 0;
   private readonly CHORD_TIMEOUT_MS = 500; // Time window for chord completion
 

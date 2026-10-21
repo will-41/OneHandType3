@@ -26,8 +26,8 @@ const LessonRenderer: React.FC<LessonRendererProps> = ({
       id: source?.id || `default-lesson-${Date.now()}`,
       title: source?.title || 'Typing Lesson',
       description: source?.description || 'Practice your typing skills',
-      content: source?.content || source?.practiceText?.join('\\n') || 'Default lesson content',
-      text: source?.content || source?.practiceText?.join('\\n') || 'Default lesson content',
+      content: source?.practiceText?.join('\n') || source?.content || 'Default lesson content',
+      text: source?.practiceText?.join('\n') || source?.content || 'Default lesson content',
       category: (source?.category || 'curriculum') as "basics" | "words" | "sentences" | "advanced" | "curriculum",
       level: levelNum,
       difficulty: source?.difficulty || 3,
@@ -36,7 +36,7 @@ const LessonRenderer: React.FC<LessonRendererProps> = ({
       handCompatibility: ['left', 'right'] as ("left" | "right")[],
       focusKeys: source?.keyFocus || [],
       prerequisites: source?.prerequisites || [],
-      wordCount: source?.content?.split(/\\s+/)?.length || 30,
+      wordCount: (source?.practiceText?.join(' ') || source?.content)?.split(/\s+/)?.length || 30,
       estimatedMinutes: source?.estimatedTime || 5,
       estimatedTime: source?.estimatedTime || 5
     };
@@ -47,7 +47,6 @@ const LessonRenderer: React.FC<LessonRendererProps> = ({
     // First check standard lessons
     const standardLesson = lessons?.find(l => l.id === selectedLessonId);
     if (standardLesson) {
-      console.log('📚 Found standard lesson:', selectedLessonId);
       return standardLesson;
     }
 
@@ -57,7 +56,6 @@ const LessonRenderer: React.FC<LessonRendererProps> = ({
         if (level && level.lessons) {
           const curriculumLesson = level.lessons.find((l: any) => l && l.id === selectedLessonId);
           if (curriculumLesson) {
-            console.log('👑 Found Realm of Keys lesson:', selectedLessonId);
             
             // Extract level number from level ID (e.g., "level-3-bloomvale" -> 3)
             let levelNumber = 1;
@@ -67,7 +65,6 @@ const LessonRenderer: React.FC<LessonRendererProps> = ({
                 levelNumber = parseInt(idParts[1], 10);
               }
             } catch (e) {
-              console.error('Error parsing level number:', e);
             }
             
             // Convert curriculum lesson to standard lesson
@@ -76,8 +73,6 @@ const LessonRenderer: React.FC<LessonRendererProps> = ({
         }
       }
     }
-    
-    console.error('⚠️ Lesson not found:', selectedLessonId);
     // Fallback to a default lesson
     return createStandardizedLesson({
       id: 'default-lesson',

@@ -23,12 +23,9 @@ export default function LessonPage({ lesson, onBack }: LessonPageProps) {
 
   const handleComplete = () => {
     // Handle lesson completion logic here
-    console.log('Lesson completed!');
     // For now, just go back to home after completion
     setTimeout(() => onBack(), 2000);
   };
-
-  console.log('🎯 LessonPage rendering with lesson:', lesson);
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
