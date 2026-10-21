@@ -236,6 +236,13 @@ export default function SettingsPage() {
             setSoundEnabled(v);
           }}
         />
+        <ToggleRow
+          id="vibration"
+          label="Vibration"
+          description="A gentle buzz on each key, mistakes, and lesson completion."
+          checked={a11y.hapticFeedback}
+          onChange={(v) => update({ hapticFeedback: v })}
+        />
       </Group>
 
       <Group title="Appearance">

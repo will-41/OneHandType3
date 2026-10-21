@@ -369,7 +369,7 @@ const defaultAccessibilitySettings: AccessibilitySettings = {
   focusIndicator: "enhanced",
   cursorSize: "normal",
   audioFeedback: true,
-  hapticFeedback: false,
+  hapticFeedback: true,
   
   // Additional settings with defaults
   backgroundMusicEnabled: true,
