@@ -31,18 +31,17 @@ for (const [label, path] of tabs) {
 }
 ok('5 tabs navigate to correct routes');
 
-// 2. Complete basics-1 ("f" x20 separated by spaces)
+// 2. Complete basics-1 ("f" x20 separated by spaces) via physical keyboard events
 await page.goto(`${base}/lesson/basics-1`, { waitUntil: 'networkidle' });
 if (await nav.count()) fail('tab bar should be hidden on lesson screen');
-const ta = page.locator('textarea');
-await ta.waitFor({ timeout: 8000 }).catch(() => fail('lesson textarea missing'));
-await ta.click();
-await ta.pressSequentially('f f f f f f f f f f f f f f f f f f f f', { delay: 15 });
-await page.getByText('Lesson Complete', { exact: false }).waitFor({ timeout: 5000 }).catch(() => fail('completion card did not appear'));
+await page.locator('[data-testid="onscreen-keyboard"]').waitFor({ timeout: 8000 }).catch(() => fail('practice keyboard missing'));
+await page.keyboard.type('f f f f f f f f f f f f f f f f f f f f', { delay: 15 });
+const done = page.getByRole('heading', { name: 'Lesson complete' });
+await done.waitFor({ timeout: 5000 }).catch(() => fail('results sheet did not appear'));
 await page.waitForTimeout(1500);
-if (!(await page.getByText('Lesson Complete', { exact: false }).isVisible())) fail('results card auto-dismissed');
+if (!(await done.isVisible())) fail('results sheet auto-dismissed');
 if (shots) await page.screenshot({ path: `${shots}/lesson-complete.png` });
-ok('lesson completes and results card stays');
+ok('lesson completes and results sheet stays');
 
 // 3. Persistence across reload
 const stored = await page.evaluate(() => localStorage.getItem('onehandtype-store'));
