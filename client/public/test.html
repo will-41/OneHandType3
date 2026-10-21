@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Console Test</title>
+</head>
+<body>
+    <h1>Console Test Page</h1>
+    <button id="testBtn" style="padding: 20px; font-size: 20px; background: blue; color: white;">Click Me - Should Log</button>
+    
+    <script>
+        console.log('=== TEST PAGE LOADED ===');
+        console.log('This should appear in console immediately');
+        
+        document.getElementById('testBtn').onclick = function() {
+            console.log('=== BUTTON CLICKED ===');
+            alert('Button works! Check console for logs.');
+        };
+        
+        // Test console periodically
+        setInterval(() => {
+            console.log('Periodic test log:', new Date().toLocaleTimeString());
+        }, 5000);
+    </script>
+</body>
+</html>

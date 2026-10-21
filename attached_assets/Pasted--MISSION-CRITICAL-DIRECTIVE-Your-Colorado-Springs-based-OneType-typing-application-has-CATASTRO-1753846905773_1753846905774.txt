@@ -1,0 +1,251 @@
+⚠️ MISSION CRITICAL DIRECTIVE ⚠️
+Your Colorado Springs-based OneType typing application has CATASTROPHIC LESSON NAVIGATION FAILURE. After 2+ HOURS of debugging attempts with NO SUCCESS, you are now under ZERO TOLERANCE ENFORCEMENT with MANDATORY GATEKEEPER VALIDATION.
+
+🚨 CRITICAL PROBLEM STATEMENT
+PRIMARY FAILURE: "Start Lesson" buttons DO NOT WORK - users cannot access typing interface
+
+SPECIFIC TARGET: Index Finger - F lesson must be 100% FUNCTIONAL
+
+SECONDARY FAILURE: No console logs appearing, suggesting FUNDAMENTAL JAVASCRIPT ERRORS
+
+TERTIARY FAILURE: Debug panels and alerts NOT RENDERING - React app may not be loading
+
+🔥 GATEKEEPER DEPLOYMENT PROTOCOL
+GATEKEEPER AGENT 1: JAVASCRIPT EXECUTION ENFORCER
+You are Gatekeeper Agent 1, an EXTREMELY RUTHLESS JavaScript validation agent with ZERO TOLERANCE for non-functional code.
+
+CRITICAL REQUIREMENTS (ALL MUST BE MET):
+
+Console Access: Browser console MUST show React app logs and debug messages
+
+Click Events: ALL "Start Lesson" buttons MUST register click events in console
+
+Navigation Flow: Clicking "Start Lesson" MUST navigate to typing interface
+
+Error Detection: ZERO JavaScript errors preventing app execution
+
+Component Rendering: All React components MUST render without crashing
+
+EVALUATION PROCESS:
+
+REJECT IMMEDIATELY if ANY console logs fail to appear
+
+REJECT IMMEDIATELY if buttons don't respond to clicks
+
+REJECT IMMEDIATELY if navigation doesn't work
+
+NO PARTIAL CREDIT - Either complete functionality or COMPLETE REJECTION
+
+GATEKEEPER AGENT 2: LESSON NAVIGATION ENFORCER
+You are Gatekeeper Agent 2, an UNFORGIVING lesson flow validation agent.
+
+CRITICAL REQUIREMENTS (ALL MUST BE MET):
+
+Start Typing: Button navigates to lesson selection page
+
+Lesson Selection: "Index Finger - F" lesson visible and clickable
+
+Lesson Launch: "Start Lesson" button loads typing interface with "f f f f f" content
+
+Mobile Mode: Automatic landscape orientation for mobile devices
+
+Virtual Keyboard: On-screen keyboard appears and responds to touches
+
+GATEKEEPER AGENT 3: STATE MANAGEMENT ENFORCER
+You are Gatekeeper Agent 3, a ZERO-COMPROMISE application state validation agent.
+
+CRITICAL REQUIREMENTS (ALL MUST BE MET):
+
+View State: App correctly switches between 'main', 'lessons', and 'typing' views
+
+Lesson Data: Lesson content properly loads and displays
+
+User Progress: Stats and progress tracking functional
+
+Store Integration: Zustand store properly manages application state
+
+Component Props: All props passed correctly between components
+
+🛠️ MANDATORY EXECUTION SEQUENCE
+PHASE 1: IMMEDIATE SYSTEM DIAGNOSIS (0-5 minutes)
+javascript
+// MANDATORY FIRST ACTION - SYSTEM HEALTH CHECK
+console.log("=== REPLIT AGENT SYSTEM DIAGNOSIS START ===");
+console.log("React Version:", React.version);
+console.log("Current View State:", /* check current view */);
+console.log("Available Lessons:", /* list all lessons */);
+console.log("JavaScript Errors:", /* check for errors */);
+console.log("=== DIAGNOSIS COMPLETE ===");
+PHASE 2: COMPONENT VALIDATION (5-10 minutes)
+REQUIRED ACTIONS:
+
+Test EnhancedMainMenu rendering - Verify all cards display
+
+Test SwipeableLessonSelector loading - Confirm lesson cards appear
+
+Test TypingGame component - Ensure typing interface loads
+
+Test useTypingStore hook - Validate state management
+
+Test lesson data structure - Confirm lesson content exists
+
+PHASE 3: EVENT HANDLER RECONSTRUCTION (10-15 minutes)
+REQUIRED ACTIONS:
+
+Create bulletproof onClick handlers for all buttons
+
+Implement fail-safe navigation logic with error catching
+
+Add comprehensive logging at every interaction point
+
+Test click event propagation and prevent conflicts
+
+Validate function prop passing through component hierarchy
+
+PHASE 4: INTEGRATION TESTING (15-20 minutes)
+REQUIRED ACTIONS:
+
+End-to-end lesson flow test - Main menu → Lesson selection → Typing interface
+
+Mobile responsiveness test - Landscape mode activation
+
+Virtual keyboard test - Touch response and character input
+
+State persistence test - User progress tracking
+
+Error recovery test - Graceful failure handling
+
+📊 MANDATORY VALIDATION CHECKPOINTS
+CHECKPOINT 1: CONSOLE VALIDATION
+bash
+# Open browser console and run:
+# Expected: Detailed React app logs and component lifecycle messages
+# GATEKEEPER 1 APPROVAL REQUIRED
+CHECKPOINT 2: NAVIGATION VALIDATION
+bash
+# Manual Test Sequence:
+# 1. Click "Start Typing" → Should navigate to lesson selection
+# 2. Click "Index Finger - F" lesson → Should show lesson details
+# 3. Click "Start Lesson" → Should navigate to typing interface
+# GATEKEEPER 2 APPROVAL REQUIRED
+CHECKPOINT 3: FUNCTIONALITY VALIDATION
+bash
+# Typing Interface Test:
+# 1. Virtual keyboard visible and responsive
+# 2. Lesson content "f f f f f" displayed
+# 3. Character input registering correctly
+# 4. Mobile landscape mode active
+# GATEKEEPER 3 APPROVAL REQUIRED
+🎯 SPECIFIC TECHNICAL REQUIREMENTS
+LESSON NAVIGATION FLOW:
+javascript
+// EXACT FLOW THAT MUST WORK:
+MainMenu → "Start Typing" click → 
+LessonSelection page → "Index Finger - F" lesson →
+"Start Lesson" click → TypingGame interface →
+Virtual keyboard + lesson content display
+REQUIRED CODE PATTERNS:
+javascript
+// MANDATORY EVENT HANDLER PATTERN:
+const handleStartLesson = (lesson) => {
+  console.log("=== LESSON START INITIATED ===", lesson);
+  console.log("Lesson ID:", lesson.id);
+  console.log("Lesson Content:", lesson.content);
+  
+  // Immediate state change
+  setCurrentView('typing');
+  setCurrentLesson(lesson);
+  
+  console.log("=== LESSON START COMPLETE ===");
+};
+⚡ GATEKEEPER ENFORCEMENT PROTOCOL
+ZERO TOLERANCE RULES:
+ANY non-functional button = COMPLETE REJECTION
+
+ANY missing console log = COMPLETE REJECTION
+
+ANY navigation failure = COMPLETE REJECTION
+
+ANY mobile responsiveness issue = COMPLETE REJECTION
+
+MANDATORY EVIDENCE FOR EACH GATEKEEPER:
+text
+✅ GATEKEEPER [X] VALIDATION REPORT
+- Test Performed: [Specific test executed]
+- Result: [PASS/FAIL with evidence]
+- Console Output: [Exact console messages]
+- Navigation Success: [YES/NO with details]
+- Mobile Function: [WORKING/BROKEN with specifics]
+- Verdict: [APPROVED/REJECTED with reasoning]
+🔧 REPLIT-SPECIFIC DEBUGGING COMMANDS
+MANDATORY DIAGNOSTIC SEQUENCE:
+bash
+# Run these commands in Replit Console:
+cd client && npm run build    # Check for build errors
+cd client && npm run dev      # Start dev server
+curl -s http://localhost:3000 # Test server response
+ps aux | grep node           # Check running processes
+🚨 FAILURE IS NOT AN OPTION
+IF ANY GATEKEEPER REJECTS:
+STOP ALL OTHER WORK immediately
+
+IDENTIFY ROOT CAUSE of specific failure
+
+IMPLEMENT TARGETED FIX for that failure only
+
+RE-TEST SPECIFIC CHECKPOINT before proceeding
+
+RE-SUBMIT TO ALL GATEKEEPERS for full validation
+
+ESCALATION PROTOCOL:
+More than 2 rejection cycles = Rebuild component from scratch
+
+Console logs still not appearing = Check for critical JavaScript errors
+
+Navigation still broken = Rewrite entire onClick handler chain
+
+Mobile mode not working = Implement device detection and orientation lock
+
+🎖️ SUCCESS CRITERIA (ALL REQUIRED)
+TECHNICAL METRICS:
+✅ Console shows detailed React logs
+
+✅ All buttons register click events
+
+✅ Navigation completes in <2 seconds
+
+✅ Lesson content loads correctly
+
+✅ Mobile landscape mode activates
+
+FUNCTIONAL METRICS:
+✅ "Start Typing" navigates to lesson selection
+
+✅ "Index Finger - F" lesson is clickable
+
+✅ "Start Lesson" opens typing interface
+
+✅ Virtual keyboard appears and responds
+
+✅ User can type lesson content "f f f f f"
+
+USER EXPERIENCE METRICS:
+✅ Smooth transitions between views
+
+✅ No JavaScript errors or crashes
+
+✅ Responsive design on mobile devices
+
+✅ Clear visual feedback for all actions
+
+✅ Intuitive lesson progression flow
+
+🔥 FINAL MANDATE
+This OneType typing application MUST BE 100% FUNCTIONAL after this prompt execution. The Colorado Springs user has spent 2+ hours on this issue with ZERO PROGRESS. This is your FINAL OPPORTUNITY to prove Replit Agent's capability.
+
+REMEMBER: The Gatekeepers are watching. They have ZERO TOLERANCE for incomplete work. They will REJECT ANY SOLUTION that doesn't meet ALL REQUIREMENTS.
+
+Either deliver COMPLETE FUNCTIONALITY or face COMPLETE REJECTION. There is no middle ground.
+
+BEGIN IMMEDIATE EXECUTION. THE GATEKEEPERS ARE WAITING.
+
