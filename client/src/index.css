@@ -3,105 +3,167 @@
 @tailwind utilities;
 
 @layer base {
+  /*
+   * One-Type palette: indigo/violet primary, parchment-warm accents.
+   * Values are HSL triplets (H S% L%) consumed as hsl(var(--token)).
+   * Light = parchment; dark (default) = deep indigo slate.
+   * Contrast checked (WCAG AA): text pairs >= 4.5:1.
+   */
   :root {
-    /* OneType Color Scheme - WCAG 2.2 AA Compliant */
-    --primary: 21 101 192; /* #1565C0 - Deep blue for high contrast */
-    --primary-foreground: 255 255 255; /* High contrast white */
-    
-    --secondary: 69 90 100; /* #455A64 - Muted blue-gray */
-    --secondary-foreground: 255 255 255;
-    
-    --success: 46 125 50; /* #2E7D32 - Forest green */
-    --success-foreground: 255 255 255;
-    
-    --accent: 245 124 0; /* #F57C00 - Amber for visibility */
-    --accent-foreground: 0 0 0;
-    
-    --background: 255 255 255; /* Pure white for maximum contrast */
-    --foreground: 0 0 0; /* Pure black for maximum readability */
-    
-    --muted: 240 240 240;
-    --muted-foreground: 60 60 60;
-    
-    --card: 255 255 255;
-    --card-foreground: 0 0 0;
-    
-    --popover: 255 255 255;
-    --popover-foreground: 33 33 33;
-    
-    --border: 200 200 200;
-    --input: 200 200 200;
-    --ring: 21 101 192;
-    
-    --destructive: 244 67 54;
-    --destructive-foreground: 255 255 255;
-    
+    --background: 40 33% 97%;
+    --foreground: 232 35% 12%;
+
+    --card: 40 40% 99%;
+    --card-foreground: 232 35% 12%;
+
+    --popover: 40 40% 99%;
+    --popover-foreground: 232 35% 12%;
+
+    --primary: 252 70% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 232 25% 90%;
+    --secondary-foreground: 232 35% 18%;
+
+    --muted: 40 20% 92%;
+    --muted-foreground: 232 15% 38%;
+
+    --accent: 36 85% 55%;
+    --accent-foreground: 30 50% 10%;
+
+    --success: 142 65% 26%;
+    --success-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 18% 84%;
+    --input: 40 18% 80%;
+    --ring: 252 70% 48%;
+
+    /* Parchment accents (warm) */
+    --parchment: 40 45% 90%;
+    --parchment-foreground: 30 40% 18%;
+
     /* Chart colors */
-    --chart-1: 76 175 80;
-    --chart-2: 33 150 243;
-    --chart-3: 255 152 0;
-    --chart-4: 156 39 176;
-    --chart-5: 255 193 7;
-    
-    /* Difficulty level colors */
-    --difficulty-1: 34 197 94; /* Green - Beginner */
-    --difficulty-2: 59 130 246; /* Blue - Easy */
-    --difficulty-3: 245 158 11; /* Amber - Medium */
-    --difficulty-4: 249 115 22; /* Orange - Hard */
-    --difficulty-5: 239 68 68; /* Red - Expert */
-    
+    --chart-1: 252 70% 55%;
+    --chart-2: 200 80% 42%;
+    --chart-3: 36 85% 45%;
+    --chart-4: 145 55% 35%;
+    --chart-5: 10 80% 50%;
+
+    /* Difficulty level colors (raw rgb for legacy consumers) */
+    --difficulty-1: 34 197 94;
+    --difficulty-2: 59 130 246;
+    --difficulty-3: 245 158 11;
+    --difficulty-4: 249 115 22;
+    --difficulty-5: 239 68 68;
+
     /* Category colors */
-    --category-basics: 34 197 94; /* Green */
-    --category-words: 59 130 246; /* Blue */
-    --category-sentences: 147 51 234; /* Purple */
-    --category-advanced: 249 115 22; /* Orange */
-    
+    --category-basics: 145 55% 40%;
+    --category-words: 200 80% 45%;
+    --category-sentences: 262 70% 55%;
+    --category-advanced: 24 90% 52%;
+
     /* Hand preference colors */
-    --hand-left: 147 51 234; /* Purple */
-    --hand-right: 59 130 246; /* Blue */
-    
+    --hand-left: 262 70% 55%;
+    --hand-right: 200 80% 45%;
+
+    /* Shell */
+    --shell-bg: 40 33% 97% / 0.82;
+    --shell-border: 232 20% 70% / 0.35;
+
     /* Accessibility variables */
-    --focus-ring: 76 175 80;
+    --focus-ring: 252 70% 48%;
     --focus-ring-offset: 2px;
     --touch-target-min: 44px;
-    
+
     /* Typography */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-    
+
     /* Border radius */
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* Bottom tab bar height (excl. safe area) */
+    --tabbar-height: 4rem;
   }
 
   .dark {
-    /* Dark theme overrides for high contrast mode */
-    --background: 18 18 18;
-    --foreground: 250 250 250;
-    
-    --card: 24 24 27;
-    --card-foreground: 250 250 250;
-    
-    --popover: 24 24 27;
-    --popover-foreground: 250 250 250;
-    
-    --primary: 34 197 94; /* Brighter green for dark mode */
-    --primary-foreground: 18 18 18;
-    
-    --secondary: 59 130 246; /* Brighter blue for dark mode */
-    --secondary-foreground: 250 250 250;
-    
-    --muted: 39 39 42;
-    --muted-foreground: 161 161 170;
-    
-    --accent: 251 146 60; /* Brighter orange for dark mode */
-    --accent-foreground: 18 18 18;
-    
-    --destructive: 239 68 68;
-    --destructive-foreground: 250 250 250;
-    
-    --border: 39 39 42;
-    --input: 39 39 42;
-    --ring: 34 197 94;
+    --background: 232 28% 8%;
+    --foreground: 40 30% 96%;
+
+    --card: 232 26% 12%;
+    --card-foreground: 40 30% 96%;
+
+    --popover: 232 26% 12%;
+    --popover-foreground: 40 30% 96%;
+
+    --primary: 252 90% 72%;
+    --primary-foreground: 232 40% 8%;
+
+    --secondary: 232 22% 20%;
+    --secondary-foreground: 40 30% 96%;
+
+    --muted: 232 20% 18%;
+    --muted-foreground: 230 15% 70%;
+
+    --accent: 38 70% 72%;
+    --accent-foreground: 30 40% 10%;
+
+    --success: 142 60% 45%;
+    --success-foreground: 232 40% 8%;
+
+    --destructive: 0 68% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 232 18% 22%;
+    --input: 232 18% 26%;
+    --ring: 252 90% 72%;
+
+    --parchment: 38 35% 22%;
+    --parchment-foreground: 40 45% 88%;
+
+    --chart-1: 252 90% 72%;
+    --chart-2: 200 80% 62%;
+    --chart-3: 38 70% 66%;
+    --chart-4: 145 55% 55%;
+    --chart-5: 10 80% 66%;
+
+    --category-basics: 145 55% 55%;
+    --category-words: 200 80% 62%;
+    --category-sentences: 262 80% 74%;
+    --category-advanced: 24 90% 64%;
+
+    --hand-left: 262 80% 74%;
+    --hand-right: 200 80% 62%;
+
+    --shell-bg: 232 28% 8% / 0.82;
+    --shell-border: 232 18% 40% / 0.4;
+
+    --focus-ring: 252 90% 72%;
+  }
+
+  /* High contrast: user toggle (class) or OS preference */
+  .high-contrast {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --border: 0 0% 0%;
+    --muted-foreground: 0 0% 20%;
+    --primary: 245 100% 30%;
+    --primary-foreground: 0 0% 100%;
+    --focus-ring: 0 0% 0%;
+  }
+
+  .dark.high-contrast {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 4%;
+    --border: 0 0% 100%;
+    --muted-foreground: 0 0% 85%;
+    --primary: 55 100% 65%;
+    --primary-foreground: 0 0% 0%;
+    --focus-ring: 55 100% 65%;
   }
 
   * {
@@ -111,6 +173,7 @@
   html {
     /* Ensure smooth scrolling */
     scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
@@ -126,25 +189,8 @@
     text-rendering: optimizeLegibility;
     
     /* Support for system font scaling */
-    font-size: clamp(14px, 1rem, 18px);
+    font-size: 1rem; /* scales with <html> font-size (Settings > Text size) */
     line-height: 1.6;
-  }
-
-  /* High contrast mode support */
-  @media (prefers-contrast: high) {
-    :root {
-      --background: 255 255 255;
-      --foreground: 0 0 0;
-      --primary: 0 100 0;
-      --border: 0 0 0;
-    }
-    
-    .dark {
-      --background: 0 0 0;
-      --foreground: 255 255 255;
-      --primary: 0 255 0;
-      --border: 255 255 255;
-    }
   }
 
   /* Reduced motion support */
@@ -157,6 +203,16 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+
+  /* In-app "reduce motion" toggle */
+  .reduce-motion *,
+  .reduce-motion *::before,
+  .reduce-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 
   /* Focus management for accessibility */
@@ -232,7 +288,7 @@
 
   /* Large text mode */
   .large-text {
-    font-size: 120%;
+    /* sizing handled via <html> font-size; kept as a hook for components */
   }
 
   .large-text h1 { font-size: 2.5rem; }

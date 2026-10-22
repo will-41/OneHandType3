@@ -1,42 +1,42 @@
-import React from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { type Lesson } from '../lib/lessons';
-import { Button } from '../components/ui/button.tsx';
-import TypingGameWithKeyboard from '../components/TypingGameWithKeyboard';
+import PracticeScreen from '../components/practice/PracticeScreen';
 
 interface LessonPageProps {
-  lesson: Lesson;
+  lesson: Lesson | null;
   onBack: () => void;
+  nextLesson?: { id: string; title: string } | null;
+  onNext?: (lessonId: string) => void;
 }
 
-export default function LessonPage({ lesson, onBack }: LessonPageProps) {
+/** Route-level wrapper: renders the practice screen, or a friendly not-found state. */
+export default function LessonPage({ lesson, onBack, nextLesson, onNext }: LessonPageProps) {
   if (!lesson) {
     return (
-      <div className="min-h-screen bg-slate-900 text-white p-6 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Lesson Not Found</h1>
-          <p className="text-slate-400 mb-4">The requested lesson could not be loaded.</p>
-          <Button onClick={onBack}>Return to Menu</Button>
-        </div>
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 bg-background px-6 text-center text-foreground">
+        <h1 className="text-xl font-semibold">Lesson not found</h1>
+        <p className="max-w-sm text-muted-foreground">We could not find that lesson. It may have been renamed or removed.</p>
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-primary px-5 font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <ArrowLeft aria-hidden="true" className="h-5 w-5" />
+          Go back
+        </button>
       </div>
     );
   }
 
-  const handleComplete = () => {
-    // Handle lesson completion logic here
-    console.log('Lesson completed!');
-    // For now, just go back to home after completion
-    setTimeout(() => onBack(), 2000);
-  };
-
-  console.log('🎯 LessonPage rendering with lesson:', lesson);
-
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
-      <TypingGameWithKeyboard 
-        lesson={lesson}
-        onComplete={handleComplete}
-        onBack={onBack}
-      />
-    </div>
+    <PracticeScreen
+      lessonId={lesson.id}
+      title={lesson.title}
+      text={lesson.content || lesson.text || ''}
+      targetWpm={lesson.targetWpm}
+      onBack={onBack}
+      nextLesson={nextLesson}
+      onNext={onNext}
+    />
   );
 }

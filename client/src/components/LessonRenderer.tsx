@@ -1,100 +1,93 @@
-import React from 'react';
-import { Lesson as LessonType } from '../lib/lessons';
+import { useMemo } from 'react';
+import { useLocation } from 'wouter';
+import { type Lesson as LessonType } from '../lib/lessons';
 import LessonPage from '../pages/LessonPage';
-import { CurriculumLevel } from '../lib/gamifiedCurriculum';
+import { type CurriculumLevel } from '../lib/gamifiedCurriculum';
+import { useTypingStore } from '../lib/stores/useTypingStore';
 
 interface LessonRendererProps {
   selectedLessonId: string;
-  lessons: any[] | undefined | null; // Using any[] to avoid type conflicts
+  lessons: LessonType[] | undefined | null;
   gamifiedCurriculum: CurriculumLevel[] | undefined;
   onBack: () => void;
 }
 
+interface Resolved {
+  lesson: LessonType | null;
+  next: { id: string; title: string } | null;
+}
+
+/** Convert a curriculum lesson to the standard lesson shape (practiceText lines joined by real newlines). */
+function fromCurriculum(source: CurriculumLevel['lessons'][number], levelNum: number): LessonType {
+  const text = source.practiceText?.join('\n') || source.content || '';
+  return {
+    id: source.id,
+    title: source.title || 'Typing Lesson',
+    description: source.description || 'Practice your typing skills',
+    content: text,
+    text,
+    category: 'curriculum',
+    level: levelNum,
+    difficulty: source.difficulty || 3,
+    targetWpm: source.targetWpm || 30,
+    timeLimit: 60,
+    handCompatibility: ['left', 'right'],
+    focusKeys: source.keyFocus || [],
+    prerequisites: source.prerequisites || [],
+    wordCount: text.split(/\s+/).filter(Boolean).length,
+    estimatedMinutes: source.estimatedTime || 5,
+    estimatedTime: source.estimatedTime || 5,
+  };
+}
+
+function levelNumber(level: CurriculumLevel): number {
+  const n = parseInt(level.id.split('-')[1] ?? '', 10);
+  return Number.isNaN(n) ? 1 : n;
+}
+
 /**
- * LessonRenderer component - Handles finding and properly formatting lessons for display
- * This component abstracts the lesson finding logic to avoid TypeScript issues in App.tsx
+ * Resolves a lesson id to a lesson (bundled, custom or curriculum) plus the
+ * next lesson in the same list, then renders the practice screen.
  */
-const LessonRenderer: React.FC<LessonRendererProps> = ({ 
-  selectedLessonId, 
-  lessons, 
-  gamifiedCurriculum,
-  onBack 
-}) => {
-  // Create a properly typed lesson object
-  const createStandardizedLesson = (source: any, levelNum: number = 1): LessonType => {
-    return {
-      id: source?.id || `default-lesson-${Date.now()}`,
-      title: source?.title || 'Typing Lesson',
-      description: source?.description || 'Practice your typing skills',
-      content: source?.content || source?.practiceText?.join('\\n') || 'Default lesson content',
-      text: source?.content || source?.practiceText?.join('\\n') || 'Default lesson content',
-      category: (source?.category || 'curriculum') as "basics" | "words" | "sentences" | "advanced" | "curriculum",
-      level: levelNum,
-      difficulty: source?.difficulty || 3,
-      targetWpm: source?.targetWpm || 30,
-      timeLimit: source?.timeLimit || 60,
-      handCompatibility: ['left', 'right'] as ("left" | "right")[],
-      focusKeys: source?.keyFocus || [],
-      prerequisites: source?.prerequisites || [],
-      wordCount: source?.content?.split(/\\s+/)?.length || 30,
-      estimatedMinutes: source?.estimatedTime || 5,
-      estimatedTime: source?.estimatedTime || 5
-    };
-  };
+export default function LessonRenderer({ selectedLessonId, lessons, gamifiedCurriculum, onBack }: LessonRendererProps) {
+  const [, navigate] = useLocation();
+  const customLessons = useTypingStore((s) => s.customLessons);
 
-  // Find the appropriate lesson
-  const findLesson = (): LessonType => {
-    // First check standard lessons
-    const standardLesson = lessons?.find(l => l.id === selectedLessonId);
-    if (standardLesson) {
-      console.log('📚 Found standard lesson:', selectedLessonId);
-      return standardLesson;
+  const { lesson, next } = useMemo<Resolved>(() => {
+    // Bundled lessons: next is the following entry in the bundled order.
+    const bundled = lessons ?? [];
+    const bundledIdx = bundled.findIndex((l) => l.id === selectedLessonId);
+    if (bundledIdx >= 0) {
+      const n = bundled[bundledIdx + 1];
+      return { lesson: bundled[bundledIdx], next: n ? { id: n.id, title: n.title } : null };
     }
 
-    // Then check the Realm of Keys curriculum
-    if (gamifiedCurriculum && gamifiedCurriculum.length > 0) {
-      for (const level of gamifiedCurriculum) {
-        if (level && level.lessons) {
-          const curriculumLesson = level.lessons.find((l: any) => l && l.id === selectedLessonId);
-          if (curriculumLesson) {
-            console.log('👑 Found Realm of Keys lesson:', selectedLessonId);
-            
-            // Extract level number from level ID (e.g., "level-3-bloomvale" -> 3)
-            let levelNumber = 1;
-            try {
-              const idParts = level.id.split('-');
-              if (idParts.length >= 2 && !isNaN(parseInt(idParts[1], 10))) {
-                levelNumber = parseInt(idParts[1], 10);
-              }
-            } catch (e) {
-              console.error('Error parsing level number:', e);
-            }
-            
-            // Convert curriculum lesson to standard lesson
-            return createStandardizedLesson(curriculumLesson, levelNumber);
-          }
-        }
-      }
+    const custom = customLessons?.find((l) => l.id === selectedLessonId);
+    if (custom) return { lesson: custom, next: null };
+
+    // Curriculum: next is the following lesson, continuing into the next level.
+    const flat: { lesson: CurriculumLevel['lessons'][number]; level: number }[] = [];
+    for (const level of gamifiedCurriculum ?? []) {
+      for (const l of level?.lessons ?? []) if (l) flat.push({ lesson: l, level: levelNumber(level) });
     }
-    
-    console.error('⚠️ Lesson not found:', selectedLessonId);
-    // Fallback to a default lesson
-    return createStandardizedLesson({
-      id: 'default-lesson',
-      title: 'Default Lesson',
-      description: 'This is a fallback lesson',
-      category: 'basics',
-      difficulty: 1,
-      content: 'Please select a valid lesson.',
-      targetWpm: 20,
-    }, 1);
-  };
+    const idx = flat.findIndex((f) => f.lesson.id === selectedLessonId);
+    if (idx >= 0) {
+      const n = flat[idx + 1];
+      return {
+        lesson: fromCurriculum(flat[idx].lesson, flat[idx].level),
+        next: n ? { id: n.lesson.id, title: n.lesson.title } : null,
+      };
+    }
+    return { lesson: null, next: null };
+  }, [selectedLessonId, lessons, gamifiedCurriculum, customLessons]);
 
-  // Get the current lesson with proper typing
-  const currentLesson = findLesson();
-
-  // Render the LessonPage with the current lesson
-  return <LessonPage lesson={currentLesson} onBack={onBack} />;
-};
-
-export default LessonRenderer;
+  return (
+    <LessonPage
+      lesson={lesson}
+      onBack={onBack}
+      nextLesson={next}
+      // Replace so "back" from the next lesson still returns to where the user came from.
+      onNext={(id) => navigate(`/lesson/${encodeURIComponent(id)}`, { replace: true })}
+    />
+  );
+}

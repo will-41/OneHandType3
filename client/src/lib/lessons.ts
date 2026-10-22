@@ -23,7 +23,7 @@ export const staticLessons: Lesson[] = [
   {
     id: "basics-1",
     title: "Index Finger - F",
-    description: "Train your index finger with the F key - GATEKEEPER VALIDATED",
+    description: "Train your index finger with the F key",
     category: "basics",
     level: 1,
     difficulty: 1,
@@ -296,7 +296,7 @@ export const staticLessons: Lesson[] = [
     category: "advanced",
     level: 5,
     difficulty: 5,
-    content: "The OneType application (v3.2.1) revolutionizes accessibility in typing education. Features include: 1) One-handed layouts, 2) Real-time feedback, 3) Achievement system, 4) WCAG 2.1 AA compliance. Visit https://onetype.app for more information!",
+    content: "The One-Type app (version 1.0) makes typing practice accessible. Features include: 1) one-handed layouts, 2) real-time feedback, 3) achievements, 4) WCAG 2.2 AA design. Visit https://example.com for more information!",
     targetWpm: 40,
     timeLimit: 180,
     handCompatibility: ["left", "right"],
@@ -330,21 +330,8 @@ export const staticLessons: Lesson[] = [
   },
 ];
 
-// Dynamic lessons array that will be populated from API
-export let lessons: Lesson[] = staticLessons; // Initialize with static lessons as fallback
-
-// Function to update lessons from API
-export function setLessons(newLessons: Lesson[]) {
-  if (newLessons && newLessons.length > 0) {
-    lessons.length = 0;
-    lessons.push(...newLessons);
-    console.log(`🔄 Updated global lessons array with ${newLessons.length} lessons from database`);
-    console.log('📋 First database lesson:', newLessons[0]);
-  } else {
-    console.log('⚠️ No lessons provided to setLessons, keeping current array');
-    console.log('📋 Current lessons count:', lessons.length);
-  }
-}
+// Bundled lessons (the app is local-first; there is no remote source).
+export const lessons: Lesson[] = staticLessons;
 
 // Helper functions that work with the dynamic lessons array
 export function getLessonById(id: string): Lesson | undefined {

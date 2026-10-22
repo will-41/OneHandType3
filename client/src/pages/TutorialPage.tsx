@@ -1,10 +1,9 @@
-import React from 'react';
-import Tutorial from '../components/Tutorial';
+import Tutorial, { type TutorialDestination } from '../components/Tutorial';
 
 interface TutorialPageProps {
-  onComplete: () => void;
+  onFinish: (destination: TutorialDestination) => void;
 }
 
-export default function TutorialPage({ onComplete }: TutorialPageProps) {
-  return <Tutorial onComplete={onComplete} />;
+export default function TutorialPage({ onFinish }: TutorialPageProps) {
+  return <Tutorial onFinish={onFinish} />;
 }
