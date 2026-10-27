@@ -2,7 +2,9 @@ import { create } from "zustand";
 import type { CustomKeyboardLayout, LayoutId } from '../customLayouts';
 import { subscribeWithSelector, persist, createJSONStorage } from "zustand/middleware";
 import type { Lesson } from "../lessons";
-import { gamifiedCurriculum } from "../gamifiedCurriculum";
+import { findCurriculumLesson } from "../gamifiedCurriculum";
+import { CHECKPOINT_XP, STRENGTHEN_ID, STRENGTHEN_XP, isCheckpointId, type KeyStats } from "../generatedLessons";
+import { addPractice, computeRhythm, localDateKey, type DailyGoal, type PracticeLog } from "../rhythm";
 import { evaluateAchievements, type RecentResult } from "../achievements";
 import type { InternationalLayout, SpecializedLayoutType } from "../../lib/keyboardLayouts";
 import { 
@@ -18,11 +20,18 @@ export type HandPreference = "left" | "right";
 export type ViewMode = "portrait" | "landscape";
 export type ThemeMode = "light" | "dark";
 
+export interface KeyStat {
+  hits: number;
+  misses: number;
+}
+
 export interface LessonResult {
   wpm: number;
   accuracy: number;
   errors: number;
   timeMs: number;
+  /** Per expected character hits/misses for this run (drives weak-key practice). */
+  keyStats?: Record<string, KeyStat>;
 }
 
 export interface LessonProgressEntry {
@@ -273,6 +282,12 @@ interface TypingState {
   recentResults: RecentResult[];
   /** True once the intro tour was finished or skipped. */
   onboardingComplete: boolean;
+  /** Lifetime per-key hits/misses (recent-weighted: halved past 500 samples). */
+  keyStats: KeyStats;
+  /** Practice minutes per local date ('YYYY-MM-DD'), most recent 400 days. */
+  practiceLog: PracticeLog;
+  /** Daily goal in minutes; 0 = off. */
+  dailyGoalMinutes: DailyGoal;
   personalStats: TypingStats; // Exposed for components
   specializedAchievements: Achievement[];
   progressMilestones: ProgressMilestone[];
@@ -305,6 +320,7 @@ interface TypingState {
   // Actions
   completeLesson: (lessonId: string, result: LessonResult) => void;
   setOnboardingComplete: (done: boolean) => void;
+  setDailyGoalMinutes: (minutes: DailyGoal) => void;
   setHandPreference: (hand: HandPreference) => void;
   setCustomLayouts: (layouts: CustomKeyboardLayout[]) => void;
   saveCustomLayout: (layout: CustomKeyboardLayout) => void;
@@ -335,19 +351,49 @@ interface TypingState {
 }
 
 const STORE_NAME = "onehandtype-store";
-const STORE_VERSION = 1;
+const STORE_VERSION = 2;
 
 /** Level curve: level N needs 100 * (N-1)^2 total XP. */
 export function levelFromXp(xp: number): number {
   return Math.floor(Math.sqrt(Math.max(0, xp) / 100)) + 1;
 }
 
-function findCurriculumLesson(lessonId: string) {
-  for (const level of gamifiedCurriculum) {
-    const found = level.lessons.find((l) => l.id === lessonId);
-    if (found) return found;
+const KEY_SAMPLE_CAP = 500;
+
+/** Merge a run's per-key tallies; halve both counts past the cap so recent practice weighs more. */
+function mergeKeyStats(base: KeyStats, run: Record<string, KeyStat> | undefined): KeyStats {
+  if (!run) return base;
+  const next: KeyStats = { ...base };
+  for (const [key, s] of Object.entries(run)) {
+    const prev = next[key] ?? { hits: 0, misses: 0 };
+    let hits = prev.hits + Math.max(0, s.hits);
+    let misses = prev.misses + Math.max(0, s.misses);
+    if (hits + misses > KEY_SAMPLE_CAP) {
+      hits = Math.floor(hits / 2);
+      misses = Math.floor(misses / 2);
+    }
+    next[key] = { hits, misses };
   }
-  return undefined;
+  return next;
+}
+
+/** v1 -> v2: realm achievements became unit achievements; new fields get defaults. */
+export function migrateStore(persistedState: unknown, version: number): Partial<TypingState> {
+  const s = (persistedState ?? {}) as Partial<TypingState>;
+  if (version < 2) {
+    const mapId = (id: string) => id.replace(/^realm-(\d+)$/, 'unit-$1');
+    const unlocked = Array.isArray(s.unlockedAchievements) ? s.unlockedAchievements.map(mapId) : [];
+    const dates = Object.fromEntries(Object.entries(s.achievementDates ?? {}).map(([k, v]) => [mapId(k), v]));
+    return {
+      ...s,
+      unlockedAchievements: [...new Set(unlocked)],
+      achievementDates: dates,
+      keyStats: s.keyStats ?? {},
+      practiceLog: s.practiceLog ?? {},
+      dailyGoalMinutes: s.dailyGoalMinutes ?? 10,
+    };
+  }
+  return s;
 }
 
 const defaultStats: TypingStats = {
@@ -441,6 +487,9 @@ export const useTypingStore = create<TypingState>()(
     achievementDates: {},
     recentResults: [],
     onboardingComplete: false,
+    keyStats: {},
+    practiceLog: {},
+    dailyGoalMinutes: 10,
     specializedAchievements: [],
     progressMilestones: [],
     progressInsights: {
@@ -876,7 +925,8 @@ export const useTypingStore = create<TypingState>()(
       };
 
       // XP: curriculum reward when defined, otherwise a formula
-      const baseXp = findCurriculumLesson(lessonId)?.rewards.xp
+      const baseXp = findCurriculumLesson(lessonId)?.lesson.rewards.xp
+        ?? (isCheckpointId(lessonId) ? CHECKPOINT_XP : lessonId === STRENGTHEN_ID ? STRENGTHEN_XP : undefined)
         ?? 10 + Math.round((state.currentLesson?.id === lessonId ? state.currentLesson.difficulty : 1) * 5);
       const performanceBonus = Math.floor(wpm / 2) + (accuracy >= 100 ? 10 : accuracy >= 95 ? 5 : 0);
       const earnedXp = (alreadyCompleted ? Math.floor(baseXp / 4) : baseXp) + performanceBonus;
@@ -889,6 +939,8 @@ export const useTypingStore = create<TypingState>()(
         personalStats: newStats,
         xp: newXp,
         level: levelFromXp(newXp),
+        keyStats: mergeKeyStats(state.keyStats, result.keyStats),
+        practiceLog: addPractice(state.practiceLog, localDateKey(), timeMin),
         wpm,
         accuracy,
         currentWpm: wpm
@@ -907,6 +959,8 @@ export const useTypingStore = create<TypingState>()(
           recent: recentResults,
           keyboardLayout: afterStats.keyboardLayout,
           customLayoutIds: afterStats.customLayouts.map((l) => l.id),
+          lessonProgress: afterStats.lessonProgress,
+          rhythm: computeRhythm(afterStats.practiceLog, afterStats.dailyGoalMinutes),
         },
         afterStats.unlockedAchievements
       );
@@ -923,6 +977,7 @@ export const useTypingStore = create<TypingState>()(
     },
 
     setOnboardingComplete: (done) => set({ onboardingComplete: done }),
+    setDailyGoalMinutes: (minutes) => set({ dailyGoalMinutes: minutes }),
 
     // Layout-specific stats management
     updateLayoutSpecificStats: (layoutType, result) => {
@@ -1057,9 +1112,12 @@ export const useTypingStore = create<TypingState>()(
       recentResults: state.recentResults,
       onboardingComplete: state.onboardingComplete,
       customLessons: state.customLessons,
-      customLayouts: state.customLayouts
+      customLayouts: state.customLayouts,
+      keyStats: state.keyStats,
+      practiceLog: state.practiceLog,
+      dailyGoalMinutes: state.dailyGoalMinutes
     }),
-    migrate: (persistedState, _version) => persistedState as Partial<TypingState>,
+    migrate: (persistedState, version) => migrateStore(persistedState, version),
     // Rebuild derived/non-serializable state (achievement objects hold functions)
     merge: (persistedState, currentState) => {
       const persisted = (persistedState ?? {}) as Partial<TypingState>;
@@ -1074,6 +1132,9 @@ export const useTypingStore = create<TypingState>()(
           ...defaultAccessibilitySettings,
           ...(persisted.accessibilitySettings ?? {})
         },
+        keyStats: { ...(persisted.keyStats ?? {}) },
+        practiceLog: { ...(persisted.practiceLog ?? {}) },
+        dailyGoalMinutes: persisted.dailyGoalMinutes ?? 10,
         specializedAchievements: [],
         progressMilestones: updateProgressMilestones(layoutStats),
         progressInsights: generateProgressInsights(layoutStats),

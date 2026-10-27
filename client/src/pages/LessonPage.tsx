@@ -34,6 +34,7 @@ export default function LessonPage({ lesson, onBack, nextLesson, onNext }: Lesso
       title={lesson.title}
       text={lesson.content || lesson.text || ''}
       targetWpm={lesson.targetWpm}
+      targetAccuracy={lesson.targetAccuracy}
       onBack={onBack}
       nextLesson={nextLesson}
       onNext={onNext}

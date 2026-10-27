@@ -2,13 +2,20 @@ import { useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { type Lesson as LessonType } from '../lib/lessons';
 import LessonPage from '../pages/LessonPage';
-import { type CurriculumLevel } from '../lib/gamifiedCurriculum';
+import { unitNumber, type CurriculumUnit } from '../lib/gamifiedCurriculum';
+import {
+  STRENGTHEN_ID,
+  buildStrengthenLesson,
+  checkpointForUnitNumber,
+  checkpointId,
+  unitNumberFromCheckpointId,
+} from '../lib/generatedLessons';
 import { useTypingStore } from '../lib/stores/useTypingStore';
 
 interface LessonRendererProps {
   selectedLessonId: string;
   lessons: LessonType[] | undefined | null;
-  gamifiedCurriculum: CurriculumLevel[] | undefined;
+  gamifiedCurriculum: CurriculumUnit[] | undefined;
   onBack: () => void;
 }
 
@@ -18,7 +25,7 @@ interface Resolved {
 }
 
 /** Convert a curriculum lesson to the standard lesson shape (practiceText lines joined by real newlines). */
-function fromCurriculum(source: CurriculumLevel['lessons'][number], levelNum: number): LessonType {
+function fromCurriculum(source: CurriculumUnit['lessons'][number], unitNum: number): LessonType {
   const text = source.practiceText?.join('\n') || source.content || '';
   return {
     id: source.id,
@@ -27,33 +34,33 @@ function fromCurriculum(source: CurriculumLevel['lessons'][number], levelNum: nu
     content: text,
     text,
     category: 'curriculum',
-    level: levelNum,
+    level: unitNum,
     difficulty: source.difficulty || 3,
     targetWpm: source.targetWpm || 30,
+    targetAccuracy: source.targetAccuracy,
     timeLimit: 60,
     handCompatibility: ['left', 'right'],
     focusKeys: source.keyFocus || [],
-    prerequisites: source.prerequisites || [],
+    prerequisites: [],
     wordCount: text.split(/\s+/).filter(Boolean).length,
     estimatedMinutes: source.estimatedTime || 5,
     estimatedTime: source.estimatedTime || 5,
   };
 }
 
-function levelNumber(level: CurriculumLevel): number {
-  const n = parseInt(level.id.split('-')[1] ?? '', 10);
-  return Number.isNaN(n) ? 1 : n;
-}
-
 /**
- * Resolves a lesson id to a lesson (bundled, custom or curriculum) plus the
- * next lesson in the same list, then renders the practice screen.
+ * Resolves a lesson id to a lesson plus the next step, then renders the practice screen.
+ * Order: bundled -> custom -> unit checkpoint -> strengthen weak keys -> path lesson.
+ * On the path, the last lesson of a unit leads to that unit's checkpoint, and a
+ * checkpoint leads to the first lesson of the next unit.
  */
 export default function LessonRenderer({ selectedLessonId, lessons, gamifiedCurriculum, onBack }: LessonRendererProps) {
   const [, navigate] = useLocation();
   const customLessons = useTypingStore((s) => s.customLessons);
 
   const { lesson, next } = useMemo<Resolved>(() => {
+    const units = gamifiedCurriculum ?? [];
+
     // Bundled lessons: next is the following entry in the bundled order.
     const bundled = lessons ?? [];
     const bundledIdx = bundled.findIndex((l) => l.id === selectedLessonId);
@@ -65,17 +72,34 @@ export default function LessonRenderer({ selectedLessonId, lessons, gamifiedCurr
     const custom = customLessons?.find((l) => l.id === selectedLessonId);
     if (custom) return { lesson: custom, next: null };
 
-    // Curriculum: next is the following lesson, continuing into the next level.
-    const flat: { lesson: CurriculumLevel['lessons'][number]; level: number }[] = [];
-    for (const level of gamifiedCurriculum ?? []) {
-      for (const l of level?.lessons ?? []) if (l) flat.push({ lesson: l, level: levelNumber(level) });
+    // Unit checkpoint.
+    const cpUnit = unitNumberFromCheckpointId(selectedLessonId);
+    if (cpUnit !== null) {
+      const cp = checkpointForUnitNumber(cpUnit);
+      const nextUnit = units.find((u) => unitNumber(u) === cpUnit + 1);
+      const first = nextUnit?.lessons[0];
+      return { lesson: cp, next: first ? { id: first.id, title: first.title } : null };
     }
-    const idx = flat.findIndex((f) => f.lesson.id === selectedLessonId);
-    if (idx >= 0) {
-      const n = flat[idx + 1];
+
+    // Strengthen weak keys: built once from the learner's data when the lesson opens
+    // (read via getState so finishing it doesn't rebuild the text under the results).
+    if (selectedLessonId === STRENGTHEN_ID) {
+      const s = useTypingStore.getState();
+      const drill = buildStrengthenLesson(s.keyStats, s.handPreference, s.keyboardLayout, s.customLayouts, s.stats.bestWpm);
+      return { lesson: drill, next: null };
+    }
+
+    // Path lesson.
+    for (const unit of units) {
+      const idx = unit.lessons.findIndex((l) => l.id === selectedLessonId);
+      if (idx < 0) continue;
+      const n = unitNumber(unit);
+      const following = unit.lessons[idx + 1];
       return {
-        lesson: fromCurriculum(flat[idx].lesson, flat[idx].level),
-        next: n ? { id: n.lesson.id, title: n.lesson.title } : null,
+        lesson: fromCurriculum(unit.lessons[idx], n),
+        next: following
+          ? { id: following.id, title: following.title }
+          : { id: checkpointId(n), title: `Unit ${n} checkpoint` },
       };
     }
     return { lesson: null, next: null };

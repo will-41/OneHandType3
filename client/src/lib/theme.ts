@@ -10,28 +10,28 @@ import { useTypingStore } from './stores/useTypingStore';
 
 export type HandSide = 'left' | 'right';
 
-/** Region accent colours (HSL triplets) keyed by curriculum level id. */
-export const REGION_ACCENTS: Record<string, string> = {
-  'level-1-hearthlands': '24 90% 58%',
-  'level-2-silverflow': '200 80% 58%',
-  'level-3-bloomvale': '145 55% 48%',
-  'level-4-gildmoor': '45 85% 56%',
-  'level-5-stormcrest': '225 75% 66%',
-  'level-6-skyreach': '190 70% 56%',
-  'level-7-sunscar': '10 80% 62%',
-  'level-8-tidebreak': '175 65% 46%',
-  'level-9-frostmarch': '265 75% 72%',
-  'level-10-crown-of-keys': '48 95% 60%',
+/** Unit accent colours (HSL triplets) keyed by curriculum unit id. */
+export const UNIT_ACCENTS: Record<string, string> = {
+  'unit-1-home-row': '24 90% 58%',
+  'unit-2-common-words': '200 80% 58%',
+  'unit-3-sentences': '145 55% 48%',
+  'unit-4-numbers-symbols': '45 85% 56%',
+  'unit-5-speed': '225 75% 66%',
+  'unit-6-precision': '190 70% 56%',
+  'unit-7-endurance': '10 80% 62%',
+  'unit-8-technical': '175 65% 46%',
+  'unit-9-mastery': '265 75% 72%',
+  'unit-10-graduation': '48 95% 60%',
 };
 
-export const DEFAULT_REGION_ACCENT = '252 90% 72%';
+export const DEFAULT_UNIT_ACCENT = '252 90% 72%';
 
-export function regionAccent(levelId: string): string {
-  return `hsl(${REGION_ACCENTS[levelId] ?? DEFAULT_REGION_ACCENT})`;
+export function unitAccent(unitId: string): string {
+  return `hsl(${UNIT_ACCENTS[unitId] ?? DEFAULT_UNIT_ACCENT})`;
 }
 
-export function regionAccentAlpha(levelId: string, alpha: number): string {
-  return `hsl(${REGION_ACCENTS[levelId] ?? DEFAULT_REGION_ACCENT} / ${alpha})`;
+export function unitAccentAlpha(unitId: string, alpha: number): string {
+  return `hsl(${UNIT_ACCENTS[unitId] ?? DEFAULT_UNIT_ACCENT} / ${alpha})`;
 }
 
 /**

@@ -1,9 +1,12 @@
-import { gamifiedCurriculum } from './gamifiedCurriculum';
+import { gamifiedCurriculum, unitNumber } from './gamifiedCurriculum';
+import { countThreeStarLessons, isCheckpointCleared, isUnitCleared, type ProgressMap } from './mastery';
+import { STRENGTHEN_ID } from './generatedLessons';
 
 /**
  * Achievements reward effort, accuracy and improvement. They are spread across
- * meaningful milestones, never reward time pressure, and never punish a missed
- * day (there are deliberately no streak-of-days achievements).
+ * meaningful milestones and never reward time pressure. Rhythm achievements use
+ * the forgiving daily rhythm (lib/rhythm.ts): one missed day a week is an
+ * automatic rest day, so real life never wipes out progress.
  *
  * Pacing rules (see `evaluateAchievements`):
  *  - the very first completed lesson unlocks only "First Steps";
@@ -11,7 +14,7 @@ import { gamifiedCurriculum } from './gamifiedCurriculum';
  *    else that is already earned simply unlocks after the next lesson.
  */
 
-export type AchievementCategory = 'milestone' | 'realm' | 'accuracy' | 'speed' | 'explore';
+export type AchievementCategory = 'milestone' | 'unit' | 'accuracy' | 'speed' | 'rhythm' | 'explore';
 
 export interface Achievement {
   id: string;
@@ -38,6 +41,10 @@ export interface AchievementContext {
   recent: RecentResult[];
   keyboardLayout: string;
   customLayoutIds: string[];
+  /** Best results per lesson id (stars, checkpoints). */
+  lessonProgress: ProgressMap;
+  /** Daily rhythm (see lib/rhythm.ts). */
+  rhythm: { currentDays: number; bestDays: number };
 }
 
 export const MAX_UNLOCKS_PER_RUN = 2;
@@ -110,14 +117,63 @@ const milestoneDefs: Def[] = [
   },
 ];
 
-const realmDefs: Def[] = gamifiedCurriculum.map((level, i) => ({
-  id: `realm-${i + 1}`,
-  title: `Realm cleared: ${level.storyTheme.region}`,
-  description: `You completed every lesson in ${level.storyTheme.region}.`,
-  requirement: `Complete all ${level.lessons.length} lessons in ${level.storyTheme.region} (realm ${i + 1} of ${gamifiedCurriculum.length}).`,
-  category: 'realm' as const,
-  test: (c: AchievementContext) => level.lessons.every((l) => c.completedLessons.includes(l.id)),
-}));
+const unitDefs: Def[] = gamifiedCurriculum.map((unit) => {
+  const n = unitNumber(unit);
+  return {
+    id: `unit-${n}`,
+    title: `Unit cleared: ${unit.title}`,
+    description: `You finished every lesson in ${unit.title} and passed its checkpoint.`,
+    requirement: `Complete all ${unit.lessons.length} lessons in Unit ${n} (${unit.title}) and pass the Unit ${n} checkpoint.`,
+    category: 'unit' as const,
+    test: (c: AchievementContext) => isUnitCleared(unit, new Set(c.completedLessons), c.lessonProgress),
+  };
+});
+
+const pathDefs: Def[] = [
+  {
+    id: 'checkpoint-first',
+    title: 'Checkpoint Passed',
+    description: 'You passed your first unit checkpoint.',
+    requirement: 'Pass any unit checkpoint at its accuracy target.',
+    category: 'unit',
+    test: (c) => gamifiedCurriculum.some((u) => isCheckpointCleared(u, new Set(c.completedLessons), c.lessonProgress)),
+  },
+  {
+    id: 'stars-3-first',
+    title: 'Three Stars',
+    description: 'You earned all three stars on a lesson.',
+    requirement: 'Reach both the accuracy and speed targets on any path lesson.',
+    category: 'accuracy',
+    test: (c) => countThreeStarLessons(gamifiedCurriculum, c.lessonProgress) >= 1,
+  },
+  {
+    id: 'stars-3-ten',
+    title: 'Star Collector',
+    description: 'Ten lessons mastered with three stars.',
+    requirement: 'Earn three stars on 10 different path lessons.',
+    category: 'accuracy',
+    test: (c) => countThreeStarLessons(gamifiedCurriculum, c.lessonProgress) >= 10,
+  },
+];
+
+const rhythmDefs: Def[] = [
+  {
+    id: 'rhythm-7',
+    title: 'Week of Rhythm',
+    description: 'You kept your daily rhythm for 7 days.',
+    requirement: 'Reach your daily goal on 7 days in a row (one rest day a week is allowed).',
+    category: 'rhythm',
+    test: (c) => c.rhythm.bestDays >= 7,
+  },
+  {
+    id: 'rhythm-30',
+    title: 'Month of Rhythm',
+    description: 'You kept your daily rhythm for 30 days.',
+    requirement: 'Reach your daily goal on 30 days in a row (one rest day a week is allowed).',
+    category: 'rhythm',
+    test: (c) => c.rhythm.bestDays >= 30,
+  },
+];
 
 const accuracyDefs: Def[] = [
   {
@@ -172,18 +228,27 @@ const exploreDefs: Def[] = [
     category: 'explore',
     test: (c) => c.customLayoutIds.includes(c.keyboardLayout),
   },
+  {
+    id: 'strengthen-first',
+    title: 'Weak Spots, Stronger',
+    description: 'You finished a Strengthen weak keys session.',
+    requirement: 'Complete a Strengthen weak keys session from the Learn path.',
+    category: 'explore',
+    test: (c) => c.completedLessons.includes(STRENGTHEN_ID),
+  },
 ];
 
-const defs: Def[] = [...milestoneDefs, ...realmDefs, ...accuracyDefs, ...speedDefs, ...exploreDefs];
+const defs: Def[] = [...milestoneDefs, ...unitDefs, ...pathDefs, ...accuracyDefs, ...speedDefs, ...rhythmDefs, ...exploreDefs];
 
 /** Public catalog (without the check functions). */
 export const achievements: Achievement[] = defs.map(({ test: _test, ...a }) => a);
 
 export const achievementCategoryLabels: Record<AchievementCategory, string> = {
   milestone: 'Milestones',
-  realm: 'Realms',
+  unit: 'Units',
   accuracy: 'Accuracy',
   speed: 'Pace',
+  rhythm: 'Rhythm',
   explore: 'Exploring',
 };
 

@@ -18,6 +18,8 @@ export interface PracticeScreenProps {
   title: string;
   text: string;
   targetWpm?: number;
+  /** Accuracy target in percent (path lessons, checkpoints, strengthen). */
+  targetAccuracy?: number;
   onBack: () => void;
   /** Next lesson in the same list, if any. */
   nextLesson?: { id: string; title: string } | null;

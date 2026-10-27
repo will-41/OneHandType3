@@ -12,11 +12,15 @@ export interface SessionStats {
   timeMs: number;
 }
 
+export type KeyTally = Record<string, { hits: number; misses: number }>;
+
 export interface SessionResult {
   wpm: number;
   accuracy: number;
   errors: number;
   timeMs: number;
+  /** Hits/misses per expected character (lower-cased; spaces and newlines skipped). */
+  keyStats: KeyTally;
 }
 
 interface Options {
@@ -45,6 +49,7 @@ export function usePracticeSession(text: string, { onComplete }: Options) {
   const typedRef = useRef('');
   const totalRef = useRef(0);
   const correctRef = useRef(0);
+  const keyStatsRef = useRef<KeyTally>({});
   const accumRef = useRef(0); // ms accumulated in finished timer segments
   const segStartRef = useRef<number | null>(null); // start of the running segment
   const statusRef = useRef<SessionStatus>('idle');
@@ -93,6 +98,14 @@ export function usePracticeSession(text: string, { onComplete }: Options) {
       if (!assist) {
         totalRef.current += 1;
         if (isCorrect) correctRef.current += 1;
+        const expected = target[idx];
+        if (expected !== ' ' && expected !== '\n') {
+          const k = expected.toLowerCase();
+          const tally = keyStatsRef.current[k] ?? { hits: 0, misses: 0 };
+          keyStatsRef.current[k] = isCorrect
+            ? { hits: tally.hits + 1, misses: tally.misses }
+            : { hits: tally.hits, misses: tally.misses + 1 };
+        }
       }
       typedRef.current += input;
       setTyped(typedRef.current);
@@ -103,7 +116,13 @@ export function usePracticeSession(text: string, { onComplete }: Options) {
       if (typedRef.current === target) {
         segStartRef.current = null;
         setStatusBoth('done');
-        onCompleteRef.current({ wpm: next.wpm, accuracy: next.accuracy, errors: next.errors, timeMs: next.timeMs });
+        onCompleteRef.current({
+          wpm: next.wpm,
+          accuracy: next.accuracy,
+          errors: next.errors,
+          timeMs: next.timeMs,
+          keyStats: { ...keyStatsRef.current },
+        });
         return 'complete';
       }
       return isCorrect ? 'correct' : 'wrong';
@@ -123,6 +142,7 @@ export function usePracticeSession(text: string, { onComplete }: Options) {
     typedRef.current = '';
     totalRef.current = 0;
     correctRef.current = 0;
+    keyStatsRef.current = {};
     accumRef.current = 0;
     segStartRef.current = null;
     setTyped('');

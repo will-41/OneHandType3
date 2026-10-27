@@ -6,7 +6,7 @@ import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { cn } from '../lib/utils';
 import { useTypingStore } from '../lib/stores/useTypingStore';
-import { regionAccent, regionAccentAlpha } from '../lib/theme';
+import { unitAccent, unitAccentAlpha } from '../lib/theme';
 import {
   Crown,
   Sword,
@@ -34,7 +34,7 @@ interface RealmLessonNavigatorProps {
 const TOTAL_LESSONS = gamifiedCurriculum.reduce((sum, level) => sum + level.lessons.length, 0);
 
 function getRegionIcon(level: CurriculumLevel) {
-  const region = level.storyTheme.region.toLowerCase();
+  const region = level.title.toLowerCase();
   if (region.includes('hearth')) return <Shield className="h-5 w-5" aria-hidden="true" />;
   if (region.includes('bloom')) return <Star className="h-5 w-5" aria-hidden="true" />;
   if (region.includes('realms') || region.includes('crown')) return <Crown className="h-5 w-5" aria-hidden="true" />;
@@ -110,7 +110,7 @@ export default function RealmLessonNavigator({ onStartLesson, className }: Realm
                 unlocked ? 'hover:shadow-lg' : 'opacity-70',
                 expanded && 'ring-2 ring-primary'
               )}
-              style={{ borderLeftColor: regionAccent(level.id) }}
+              style={{ borderLeftColor: unitAccent(level.id) }}
             >
               <button
                 type="button"
@@ -129,13 +129,13 @@ export default function RealmLessonNavigator({ onStartLesson, className }: Realm
                     <div className="flex items-center gap-3">
                       <span
                         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-                        style={{ background: regionAccentAlpha(level.id, 0.18), color: regionAccent(level.id) }}
+                        style={{ background: unitAccentAlpha(level.id, 0.18), color: unitAccent(level.id) }}
                       >
                         {getRegionIcon(level)}
                       </span>
                       <div>
                         <CardTitle className="text-lg leading-tight">{level.title}</CardTitle>
-                        <CardDescription className="text-sm">{level.storyTheme.region}</CardDescription>
+                        <CardDescription className="text-sm">{level.title}</CardDescription>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
@@ -154,7 +154,7 @@ export default function RealmLessonNavigator({ onStartLesson, className }: Realm
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3 pb-4">
-                  <p className="line-clamp-2 text-sm text-muted-foreground">{level.storyTheme.storyline}</p>
+                  <p className="line-clamp-2 text-sm text-muted-foreground">{level.theme.tagline}</p>
                   <Progress value={progress} className="h-2" aria-hidden="true" />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>{progress}% complete</span>
@@ -194,7 +194,7 @@ export default function RealmLessonNavigator({ onStartLesson, className }: Realm
                           <span>
                             <span className="block text-sm font-medium">{lesson.title}</span>
                             <span className="block text-xs opacity-80">
-                              {lesson.storyTheme.character} &bull; {lesson.storyTheme.guild}
+                              {lesson.theme.focusLabel}
                             </span>
                           </span>
                         </span>

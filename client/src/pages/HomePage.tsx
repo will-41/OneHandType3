@@ -74,7 +74,7 @@ export default function HomePage() {
     const done = new Set(completed);
     for (const realm of gamifiedCurriculum) {
       const lesson = realm.lessons.find((l) => !done.has(l.id));
-      if (lesson) return { lesson, realm: realm.storyTheme.region };
+      if (lesson) return { lesson, realm: realm.title };
     }
     return null;
   }, [completed]);

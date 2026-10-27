@@ -8,6 +8,7 @@ export interface Lesson {
   content: string;
   text?: string; // Alias for content for backward compatibility
   targetWpm: number;
+  targetAccuracy?: number; // percent; curriculum and generated lessons set it
   timeLimit?: number; // in seconds
   handCompatibility: ("left" | "right")[];
   focusKeys?: string[]; // Keys this lesson focuses on
