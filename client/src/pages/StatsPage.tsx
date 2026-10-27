@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from 'react';
 import { useLocation } from 'wouter';
-import { BarChart3, Gauge, Target, CheckCircle2, Sparkles, Clock, Trophy, Lock, ChevronDown } from 'lucide-react';
+import { BarChart3, Keyboard, CalendarDays, Gauge, Target, CheckCircle2, Sparkles, Clock, Trophy, Lock, ChevronDown } from 'lucide-react';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Progress } from '../components/ui/progress';
@@ -10,6 +10,9 @@ import { useTypingStore, levelFromXp } from '../lib/stores/useTypingStore';
 import { gamifiedCurriculum } from '../lib/gamifiedCurriculum';
 import { staticLessons } from '../lib/lessons';
 import { achievements, achievementCategoryLabels } from '../lib/achievements';
+import { resolveLayout } from '../lib/customLayouts';
+import KeyHeatmap from '../components/stats/KeyHeatmap';
+import RhythmDots from '../components/stats/RhythmDots';
 
 
 const lessonTitles = new Map<string, string>([
@@ -37,6 +40,13 @@ export default function StatsPage() {
   const stats = useTypingStore((s) => s.stats);
   const completedLessons = useTypingStore((s) => s.completedLessons);
 
+  const hand = useTypingStore((s) => s.handPreference);
+  const keyboardLayout = useTypingStore((s) => s.keyboardLayout);
+  const customLayouts = useTypingStore((s) => s.customLayouts);
+  const keyStats = useTypingStore((s) => s.keyStats);
+  const practiceLog = useTypingStore((s) => s.practiceLog);
+  const dailyGoal = useTypingStore((s) => s.dailyGoalMinutes);
+  const layout = useMemo(() => resolveLayout(hand, keyboardLayout, customLayouts), [hand, keyboardLayout, customLayouts]);
   const xp = useTypingStore((s) => s.xp);
   const unlockedIds = useTypingStore((s) => s.unlockedAchievements);
   const achievementDates = useTypingStore((s) => s.achievementDates);
@@ -60,7 +70,7 @@ export default function StatsPage() {
     [stats.lessons]
   );
 
-  const minutes = Math.round(stats.totalTimeTyped / 60);
+  const minutes = Math.round(stats.totalTimeTyped);
   const hasData = stats.bestWpm > 0 || completedLessons.length > 0 || lessonBests.length > 0;
 
   return (
@@ -84,7 +94,7 @@ export default function StatsPage() {
           icon={<CheckCircle2 className="h-4 w-4" />}
           label="Lessons completed"
           value={String(completedLessons.length)}
-          hint={`of ${staticLessons.length + gamifiedCurriculum.reduce((n, l) => n + l.lessons.length, 0)} available`}
+          hint={`of ${staticLessons.length + gamifiedCurriculum.reduce((n, l) => n + l.lessons.length + 1, 0)} available`}
         />
         <StatCard icon={<Clock className="h-4 w-4" />} label="Time practised" value={`${minutes} min`} />
       </div>
@@ -103,6 +113,27 @@ export default function StatsPage() {
         </p>
       </Card>
 
+      <section aria-labelledby="stats-keys" className="mt-8">
+        <h2 id="stats-keys" className="mb-1 flex items-center gap-2 text-lg font-semibold">
+          <Keyboard className="h-5 w-5 text-primary" aria-hidden="true" />
+          Key accuracy
+        </h2>
+        <p className="mb-3 text-sm text-muted-foreground">Based on your practice on the current layout.</p>
+        <Card className="p-4">
+          <KeyHeatmap keyStats={keyStats} layout={layout} />
+        </Card>
+      </section>
+
+      <section aria-labelledby="stats-rhythm" className="mt-8">
+        <h2 id="stats-rhythm" className="mb-3 flex items-center gap-2 text-lg font-semibold">
+          <CalendarDays className="h-5 w-5 text-primary" aria-hidden="true" />
+          Rhythm
+        </h2>
+        <Card className="p-4">
+          <RhythmDots practiceLog={practiceLog} goal={dailyGoal} />
+        </Card>
+      </section>
+
       <section aria-labelledby="stats-achievements" className="mt-8">
         <h2 id="stats-achievements" className="mb-1 flex items-center gap-2 text-lg font-semibold">
           <Trophy className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -112,7 +143,7 @@ export default function StatsPage() {
           </span>
         </h2>
         <p className="mb-3 text-sm text-muted-foreground">
-          Earned through practice, accuracy and progress. No timers, no daily streaks, nothing to lose.
+          Earned through practice, accuracy and progress. No timers, no pressure. A rest day never breaks your rhythm.
         </p>
 
         {unlockedList.length === 0 ? (

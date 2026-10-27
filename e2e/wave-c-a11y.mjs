@@ -94,6 +94,30 @@ for (const theme of ['dark', 'light']) {
   }
 }
 
+// Path: node -> lesson sheet (axe with the drawer open) -> Start ------------------------------
+console.log('\npath node -> sheet -> start');
+{
+  const page = await freshPage('dark');
+  await page.goto(`${base}/curriculum`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(500);
+  await page.locator('[data-testid="path-node-lesson-1-1"]').click();
+  const sheet = page.locator('[data-testid="lesson-sheet"]');
+  await sheet.waitFor({ state: 'visible', timeout: 5000 }).catch(() => fail('path: lesson-sheet did not open'));
+  await page.waitForTimeout(700); // drawer animation
+  const results = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+  const bad = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+  for (const v of bad) {
+    fail(`path sheet open: axe ${v.impact} ${v.id} (${v.nodes.length}): ${v.help}`);
+    for (const n of v.nodes.slice(0, 4)) console.error('      ', n.target.join(' '));
+  }
+  if (!bad.length) ok('path lesson sheet open: axe clean (0 serious/critical)');
+  if (shots) await page.screenshot({ path: `${shots}/path-sheet.png` });
+  await sheet.getByRole('button', { name: /start/i }).first().click();
+  await page.waitForURL(/\/lesson\/lesson-1-1/, { timeout: 5000 }).catch(() => fail(`path: Start did not route to /lesson/lesson-1-1 (at ${page.url()})`));
+  if (/\/lesson\/lesson-1-1/.test(page.url())) ok('sheet Start opens /lesson/lesson-1-1');
+  await page.context().close();
+}
+
 // Home first-launch hero + tutorial flow ------------------------------------------------
 console.log('\ntutorial / onboarding');
 {

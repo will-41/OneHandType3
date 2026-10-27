@@ -1,10 +1,12 @@
 import { useMemo, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
-import { ArrowRight, Compass, Gauge, Keyboard, CheckCircle2, Map as MapIcon, Play, Wrench, Sparkles, Clock } from 'lucide-react';
+import { ArrowRight, Compass, Gauge, Keyboard, CheckCircle2, Map as MapIcon, Play, Wrench, Sparkles, Clock, Star, Flag } from 'lucide-react';
 import { Card } from '../components/ui/card';
 import { Progress } from '../components/ui/progress';
 import PageContainer from '../components/shell/PageContainer';
 import { gamifiedCurriculum } from '../lib/gamifiedCurriculum';
+import { nextPathItem, starsFor } from '../lib/mastery';
+import RhythmRing from '../components/home/RhythmRing';
 import { staticLessons } from '../lib/lessons';
 import { useTypingStore, levelFromXp } from '../lib/stores/useTypingStore';
 import { mirrorRow } from '../lib/theme';
@@ -62,6 +64,7 @@ export default function HomePage() {
   const hand = useTypingStore((s) => s.handPreference);
   const xp = useTypingStore((s) => s.xp);
   const completed = useTypingStore((s) => s.completedLessons);
+  const lessonProgress = useTypingStore((s) => s.lessonProgress);
   const bestWpm = useTypingStore((s) => s.stats.bestWpm);
   const onboardingComplete = useTypingStore((s) => s.onboardingComplete);
 
@@ -71,19 +74,25 @@ export default function HomePage() {
   const levelPercent = Math.min(100, Math.max(0, ((xp - levelStart) / (levelEnd - levelStart)) * 100));
 
   const next = useMemo(() => {
-    const done = new Set(completed);
-    for (const realm of gamifiedCurriculum) {
-      const lesson = realm.lessons.find((l) => !done.has(l.id));
-      if (lesson) return { lesson, realm: realm.title };
-    }
-    return null;
-  }, [completed]);
+    const item = nextPathItem(gamifiedCurriculum, new Set(completed), lessonProgress);
+    if (!item) return null;
+    const unit = gamifiedCurriculum[item.unitIndex];
+    const lesson = item.kind === 'lesson' ? unit.lessons[item.lessonIndex] : null;
+    return {
+      item,
+      unitNo: item.unitIndex + 1,
+      unitTitle: unit.title,
+      lesson,
+      stars: lesson ? starsFor(lesson, lessonProgress[lesson.id]) : null,
+    };
+  }, [completed, lessonProgress]);
 
   const curated = useMemo(
     () => CURATED_IDS.map((id) => staticLessons.find((l) => l.id === id)).filter((l): l is NonNullable<typeof l> => Boolean(l)),
     [],
   );
 
+  const goalOn = useTypingStore((s) => s.dailyGoalMinutes) > 0;
   const isNew = !onboardingComplete && completed.length === 0;
   const rowDir = mirrorRow(hand);
 
@@ -141,30 +150,55 @@ export default function HomePage() {
         <Card className="p-4">
           {next ? (
             <>
-              <p className="text-sm text-muted-foreground">{next.realm}</p>
-              <p className="text-lg font-semibold leading-snug">{next.lesson.title}</p>
-              <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" aria-hidden="true" />
-                About {next.lesson.estimatedTime} min
+              <p className="text-sm text-muted-foreground">
+                Up next · Unit {next.unitNo} · {next.unitTitle}
               </p>
+              <p className="text-lg font-semibold leading-snug">
+                {next.item.kind === 'checkpoint' ? `Unit ${next.unitNo} checkpoint` : next.item.title}
+              </p>
+              {next.lesson && next.stars !== null ? (
+                <>
+                  <span
+                    role="img"
+                    aria-label={`${next.stars} of 3 stars`}
+                    data-testid="home-next-stars"
+                    className="mt-1 inline-flex items-center gap-0.5"
+                  >
+                    {[1, 2, 3].map((n) => (
+                      <Star
+                        key={n}
+                        aria-hidden="true"
+                        className={cn('h-4 w-4', n <= (next.stars as number) ? 'fill-primary text-primary' : 'text-muted-foreground')}
+                      />
+                    ))}
+                  </span>
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Clock className="h-4 w-4" aria-hidden="true" />
+                    About {next.lesson.estimatedTime} min
+                  </p>
+                </>
+              ) : (
+                <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Flag className="h-4 w-4" aria-hidden="true" />
+                  Show what you have learned in this unit
+                </p>
+              )}
               <div className={cn('mt-4 flex', rowDir)}>
                 <button
                   type="button"
                   className={cn(PRIMARY_BTN, 'w-full sm:w-auto')}
-                  onClick={() => navigate(`/lesson/${encodeURIComponent(next.lesson.id)}`)}
+                  onClick={() => navigate(`/lesson/${encodeURIComponent(next.item.id)}`)}
                 >
                   <Play aria-hidden="true" className="h-5 w-5" />
                   {completed.length === 0 ? 'Start lesson' : 'Continue'}
-                  <span className="sr-only">: {next.lesson.title}</span>
+                  <span className="sr-only">: {next.item.title}</span>
                 </button>
               </div>
             </>
           ) : (
             <>
-              <p className="text-lg font-semibold">Every realm cleared</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                You have completed the whole journey. Revisit any lesson in Learn, or keep practising.
-              </p>
+              <p className="text-lg font-semibold">All ten units cleared</p>
+              <p className="mt-1 text-sm text-muted-foreground">Revisit any lesson in Learn, or keep practising.</p>
               <div className={cn('mt-4 flex', rowDir)}>
                 <Link href="/curriculum" className={cn(PRIMARY_BTN, 'w-full sm:w-auto')}>
                   Open Learn
@@ -174,6 +208,12 @@ export default function HomePage() {
           )}
         </Card>
       </section>
+
+      {goalOn && (
+        <section aria-label="Daily rhythm" className="mb-5">
+          <RhythmRing />
+        </section>
+      )}
 
       {/* Quick actions */}
       <section aria-label="Quick actions" className="mb-5">

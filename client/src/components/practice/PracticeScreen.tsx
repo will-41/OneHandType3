@@ -3,6 +3,8 @@ import { useReducedMotion } from 'framer-motion';
 import { ArrowLeft, RotateCcw, Zap, Target, Gauge } from 'lucide-react';
 import { useTypingStore } from '../../lib/stores/useTypingStore';
 import { resolveLayout } from '../../lib/customLayouts';
+import { starsFor, nextStarHint } from '../../lib/mastery';
+import { weakKeys, reachableKeys, isCheckpointId, STRENGTHEN_ID } from '../../lib/generatedLessons';
 import { getAchievementById } from '../../lib/achievements';
 import { playCompletionChime, playErrorThud, playKeyClick } from '../../lib/soundFx';
 import { haptic } from '../../lib/haptics';
@@ -53,7 +55,7 @@ function Pill({ icon, label, value, testId }: { icon: React.ReactNode; label: st
  * funnels through `onChar` / `onBackspace`. There is deliberately no focused
  * textarea, so the OS keyboard never covers the app keyboard.
  */
-export default function PracticeScreen({ lessonId, title, text: rawText, targetWpm, onBack, nextLesson, onNext }: PracticeScreenProps) {
+export default function PracticeScreen({ lessonId, title, text: rawText, targetWpm, targetAccuracy, onBack, nextLesson, onNext }: PracticeScreenProps) {
   const text = useMemo(() => normalizeLessonText(rawText), [rawText]);
 
   const hand = useTypingStore((s) => s.handPreference);
@@ -87,6 +89,28 @@ export default function PracticeScreen({ lessonId, title, text: rawText, targetW
       before.completeLesson(lessonId, r);
 
       const after = useTypingStore.getState();
+
+      // Stars only apply to path lessons, checkpoints and the strengthen lesson.
+      const hasStars = lessonId.startsWith('lesson-') || isCheckpointId(lessonId) || lessonId === STRENGTHEN_ID;
+      const target = { targetWpm: targetWpm ?? 30, targetAccuracy: targetAccuracy ?? 90 };
+      const starsBefore = starsFor(target, prev);
+      const starsAfter = starsFor(target, after.lessonProgress[lessonId]);
+
+      // A previously weak key whose miss rate this session beat its stored rate by the widest margin.
+      let improvedKey: string | null = null;
+      if (r.keyStats) {
+        const weak = weakKeys(before.keyStats, reachableKeys(before.handPreference, before.keyboardLayout, before.customLayouts));
+        let bestMargin = 0;
+        for (const w of weak) {
+          const s = r.keyStats[w.key];
+          if (!s || s.hits + s.misses === 0) continue;
+          const margin = w.missRate - s.misses / (s.hits + s.misses);
+          if (margin > bestMargin) {
+            bestMargin = margin;
+            improvedKey = w.key;
+          }
+        }
+      }
       const unlocked = after.unlockedAchievements
         .filter((id) => !achievementsBefore.has(id))
         .map((id) => getAchievementById(id)?.title ?? humanizeId(id));
@@ -102,10 +126,14 @@ export default function PracticeScreen({ lessonId, title, text: rawText, targetW
         badge: !prev ? 'first-clear' : r.wpm > prev.bestWpm ? 'new-best' : null,
         achievements: unlocked,
         targetWpm,
+        stars: hasStars ? starsAfter : null,
+        starsGained: hasStars && starsAfter > starsBefore,
+        nextStarHint: hasStars ? nextStarHint(target, starsAfter) : null,
+        improvedKey,
       });
       setAnnouncement(`Lesson complete. ${r.wpm} words per minute, ${r.accuracy} percent accuracy.`);
     },
-    [lessonId, targetWpm],
+    [lessonId, targetWpm, targetAccuracy],
   );
 
   const session = usePracticeSession(text, { onComplete: handleComplete });

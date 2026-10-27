@@ -27,14 +27,24 @@ const lessonProgress = Object.fromEntries(doneIds.map((id, i) => [id, {
 const lessons = Object.fromEntries(doneIds.map((id, i) => [id, {
   attempts: 2 + (i % 3), completedCount: 1 + (i % 3), bestWpm: 28 + i * 1.6, bestAccuracy: 93 + (i % 4), totalTime: 1.5 + i * 0.2,
 }]));
+const pad2 = (n) => String(n).padStart(2, '0');
+const localKey = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+// Last 6 local days, oldest first: 12, 0, 11, 15, 10, 8 minutes (today = 8).
+const practiceLog = {};
+[12, 0, 11, 15, 10, 8].forEach((m, i) => {
+  if (m > 0) practiceLog[localKey(new Date(now - (5 - i) * day))] = m;
+});
 const seed = {
   state: {
+    keyStats: { g: { hits: 40, misses: 21 }, b: { hits: 30, misses: 17 }, t: { hits: 60, misses: 14 }, v: { hits: 20, misses: 11 }, r: { hits: 70, misses: 9 }, a: { hits: 200, misses: 3 }, s: { hits: 150, misses: 4 } },
+    practiceLog,
+    dailyGoalMinutes: 10,
     handPreference: 'right',
     themeMode: 'dark',
     keyboardLayout: 'qwerty',
     stats: {
       totalCharactersTyped: 6840, totalErrors: 273, totalTimeTyped: 96, bestWpm: 42, bestAccuracy: 96,
-      lessons, commonErrors: { g: 21, b: 17, t: 14, v: 11, r: 9 },
+      lessons,
       layoutSpecificStats: { qwerty: { totalCharacters: 6840, bestWpmForLayout: 42, bestAccuracyForLayout: 96, hoursOfPractice: 1.6, adaptationProgress: 38 } },
     },
     completedLessons: doneIds,

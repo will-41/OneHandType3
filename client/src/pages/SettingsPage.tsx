@@ -106,6 +106,8 @@ function Segmented<T extends string | number>({
 }
 
 export default function SettingsPage() {
+  const dailyGoal = useTypingStore((s) => s.dailyGoalMinutes);
+  const setDailyGoal = useTypingStore((s) => s.setDailyGoalMinutes);
   const hand = useTypingStore((s) => s.handPreference);
   const setHandPreference = useTypingStore((s) => s.setHandPreference);
   const keyboardLayout = useTypingStore((s) => s.keyboardLayout);
@@ -243,6 +245,26 @@ export default function SettingsPage() {
           checked={a11y.hapticFeedback}
           onChange={(v) => update({ hapticFeedback: v })}
         />
+      </Group>
+
+      <Group title="Practice">
+        <div className="space-y-2 px-4 py-3">
+          <div className="font-medium">Daily goal</div>
+          <Segmented
+            label="Daily goal"
+            value={dailyGoal}
+            options={[
+              { label: 'Off', value: 0 },
+              { label: '5 min', value: 5 },
+              { label: '10 min', value: 10 },
+              { label: '15 min', value: 15 },
+            ]}
+            onChange={(v) => setDailyGoal(v as 0 | 5 | 10 | 15)}
+          />
+          <p className="text-sm text-muted-foreground">
+            A day counts when you reach your goal. One rest day a week never breaks your rhythm. No reminders, ever.
+          </p>
+        </div>
       </Group>
 
       <Group title="Appearance">

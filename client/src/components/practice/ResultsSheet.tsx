@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Award, RotateCcw, ArrowRight, Check, Sparkles } from 'lucide-react';
+import { Award, RotateCcw, ArrowRight, Check, Sparkles, Star } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { formatDuration } from './inputUtils';
 
@@ -13,6 +13,12 @@ export interface ResultsData {
   badge: 'new-best' | 'first-clear' | null;
   achievements: string[];
   targetWpm?: number;
+  /** Mastery stars; null for lessons that don't award stars (bundled/custom). */
+  stars: 0 | 1 | 2 | 3 | null;
+  starsGained: boolean;
+  nextStarHint: string | null;
+  /** A previously weak key that went better this session. */
+  improvedKey: string | null;
 }
 
 interface ResultsSheetProps {
@@ -153,12 +159,50 @@ export default function ResultsSheet({
           )}
         </div>
 
+        {data.stars !== null && (
+          <div data-testid="results-stars-block" className="mb-4 text-center">
+            <div
+              data-testid="results-stars"
+              role="img"
+              aria-label={`${data.stars} of 3 stars`}
+              className="inline-flex items-center gap-1"
+            >
+              {[1, 2, 3].map((n) => (
+                <Star
+                  key={n}
+                  aria-hidden="true"
+                  className={cn('h-6 w-6', n <= (data.stars as number) ? 'fill-primary text-primary' : 'text-muted-foreground')}
+                />
+              ))}
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {data.stars === 3 ? 'Mastered' : data.nextStarHint}
+              {data.starsGained && (
+                <span
+                  className={cn(
+                    'ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-foreground',
+                    !reduceMotion && 'animate-in fade-in',
+                  )}
+                >
+                  +1 star
+                </span>
+              )}
+            </p>
+          </div>
+        )}
+
         <div className="mb-3 grid grid-cols-4 gap-2">
           <Stat label="Accuracy" value={`${data.accuracy}%`} />
           <Stat label="Time" value={formatDuration(data.timeMs)} />
           <Stat label="Errors" value={String(data.errors)} />
           <Stat label="XP" value={`+${data.xpEarned}`} />
         </div>
+
+        {data.improvedKey && (
+          <p data-testid="results-improved-key" className="mb-3 text-center text-sm font-medium text-foreground">
+            Fewer misses on {data.improvedKey.toUpperCase()} today
+          </p>
+        )}
 
         {data.achievements.length > 0 && (
           <ul className="mb-3 space-y-1" aria-label="Achievements unlocked">

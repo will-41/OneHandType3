@@ -79,12 +79,13 @@ for (const path of ['/about', '/privacy', '/nope-404']) {
 }
 ok('about, privacy, 404 render');
 
-// 6. Curriculum shows Realm of Keys and basics-1-unlocked progress
+// 6. Learn shows the skill path (Unit 1 and its checkpoint)
 await page.goto(`${base}/curriculum`, { waitUntil: 'networkidle' });
 const cur = await page.locator('body').innerText();
-if (!/Hearthlands/.test(cur)) fail('curriculum page missing region names');
+if (!/Home Row/.test(cur)) fail('curriculum page missing Unit 1 name (Home Row)');
+if (!(await page.locator('[data-testid="path-checkpoint-1"]').count())) fail('curriculum page missing path-checkpoint-1');
 if (/thrones|westeros|winterfell|keyforge/i.test(await page.content())) fail('IP strings in DOM');
-ok('curriculum renders original realms, no IP strings');
+ok('curriculum renders the skill path with a checkpoint, no IP strings');
 
 if (apiCalls.length) fail(`API calls: ${apiCalls.join(', ')}`);
 if (errors.length) fail(`console errors: ${errors.slice(0, 4).join(' | ')}`);

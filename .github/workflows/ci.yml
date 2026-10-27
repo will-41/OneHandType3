@@ -41,7 +41,7 @@ jobs:
       - name: E2E suites
         run: |
           set -e
-          for f in wave-a wave-b-practice wave-b-builder wave-b-pwa wave-c-a11y; do
+          for f in wave-a wave-b-practice wave-b-builder wave-b-pwa wave-c-a11y wave-d-path; do
             if [ -f "e2e/$f.mjs" ]; then
               echo "::group::$f"
               node "e2e/$f.mjs" http://localhost:4173
