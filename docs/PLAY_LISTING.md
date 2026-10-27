@@ -21,9 +21,10 @@ One-Type teaches you to type quickly and comfortably with one hand - whether you
 Everything runs on your phone. No account, no ads, no tracking, no internet needed.
 
 LEARN AT YOUR OWN PACE
-- A 10-realm curriculum takes you from the first home-row key to full sentences and advanced text
+- A 10-unit skill path takes you from the first home-row key to full sentences and advanced text
 - Short lessons with instant feedback on speed (WPM), accuracy and mistakes
-- Earn XP, levels and achievements for effort and improvement - no streak pressure, no dark patterns
+- Earn XP, levels and achievements for effort and improvement - no dark patterns
+- A gentle daily goal with a built-in rest day — no guilt, no nagging
 - Practice mode for free typing, plus your own custom lessons
 
 LAYOUTS BUILT FOR ONE HAND

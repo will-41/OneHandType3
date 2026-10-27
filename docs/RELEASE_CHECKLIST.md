@@ -34,7 +34,7 @@ Work top to bottom. Tick as you go.
   - [ ] App icon looks right (round and adaptive masks); splash is dark with no white flash
   - [ ] Home > start a lesson > type with the on-screen keyboard; Mirror key works
   - [ ] Finish a lesson: results sheet, XP, Stats update
-  - [ ] Learn shows all realms; Practice free typing works
+  - [ ] Learn shows all ten units, checkpoints and stars; Practice free typing works
   - [ ] Settings: change hand, layout, theme; toggle vibration (feel it) and sound
   - [ ] Keyboard builder: create, save, use a custom layout
   - [ ] Rotate to landscape and back; no layout breakage

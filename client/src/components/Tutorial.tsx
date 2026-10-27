@@ -8,6 +8,7 @@ import { resolveMirrorLayer } from './practice/inputUtils';
 import OneHandKeyboard from './practice/OneHandKeyboard';
 import { mirrorRow } from '../lib/theme';
 import { cn } from '../lib/utils';
+import { gamifiedCurriculum } from '../lib/gamifiedCurriculum';
 
 export type TutorialDestination = 'lesson' | 'home';
 
@@ -267,7 +268,7 @@ export default function Tutorial({ onFinish }: TutorialProps) {
             </div>
             <StepHeading headingRef={headingRef}>You are ready</StepHeading>
             <p className="text-base text-muted-foreground">
-              Your first lesson takes about two minutes and starts on the home row. Go at your own pace; there is no clock to beat.
+              Your first lesson takes about {gamifiedCurriculum[0].lessons[0].estimatedTime} minutes and starts on the home row. Go at your own pace; there is no clock to beat.
             </p>
             <div className="flex flex-col gap-3 pt-2">
               <button type="button" className={cn(BTN_PRIMARY, 'w-full')} onClick={() => finish('lesson')}>

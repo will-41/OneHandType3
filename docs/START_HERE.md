@@ -5,7 +5,7 @@ physically requires **you** (your identity, your accounts, your money). Each tak
 
 ## What you have
 
-- **The app** (`client/`): one-handed typing trainer. 10-realm "Realm of Keys" curriculum
+- **The app** (`client/`): one-handed typing trainer. 10-unit skill path with checkpoints, mastery stars and a weak-key coach
   (29 lessons) + 25 practice lessons, 8 one-hand keyboard layouts with a Mirror key, ARTSEY
   chords, a custom keyboard builder, custom lessons, fair achievements, onboarding tour,
   dark/light mode, high contrast, text sizes, left-hand mirror mode. Works fully offline.

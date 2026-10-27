@@ -8,7 +8,7 @@ export default function NotFound() {
         <Compass className="h-12 w-12 mx-auto mb-4 text-primary" aria-hidden="true" />
         <h1 className="text-2xl font-bold text-foreground mb-2">Page not found</h1>
         <p className="text-muted-foreground mb-6">
-          This path doesn't lead anywhere in the realm. Let's get you back on track.
+          That page isn't on the path. Let's get you back on track.
         </p>
         <Link
           href="/"
