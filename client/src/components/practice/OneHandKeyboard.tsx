@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CornerDownLeft, Delete, FlipHorizontal2, Lock } from 'lucide-react';
+import { ArrowBigUp, CornerDownLeft, Delete, FlipHorizontal2, Lock } from 'lucide-react';
 import { findChordForKeys, type KeyboardKey, type KeyboardLayout } from '../../lib/keyboardLayouts';
 import { cn } from '../../lib/utils';
 import {
@@ -37,6 +37,8 @@ interface OneHandKeyboardProps {
   onBackspace: () => void;
   /** A chord that matched nothing. */
   onInvalidChord: () => void;
+  /** Reports the Mirror state (off, once, locked) so the screen can colour the mirror axis. */
+  onMirrorChange?: (mode: 'off' | 'once' | 'locked') => void;
 }
 
 const FINGER_TOKEN: Record<string, string> = {
@@ -48,10 +50,10 @@ const FINGER_TOKEN: Record<string, string> = {
 };
 
 const KEY_BASE =
-  'relative flex h-12 min-h-[48px] min-w-[44px] select-none items-center justify-center rounded-xl border border-border bg-card font-mono text-lg font-semibold text-card-foreground touch-manipulation transition-[transform,background-color,box-shadow] duration-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50';
-const KEY_PRESSED = 'bg-secondary';
-const KEY_NEXT =
-  'border-primary bg-primary/15 text-foreground shadow-[0_0_0_2px_hsl(var(--primary)),0_0_16px_hsl(var(--primary)/0.55)]';
+  'relative flex h-[var(--key-height)] min-h-[44px] min-w-[44px] select-none items-center justify-center rounded-md border-b-[3px] border-b-transparent bg-parchment font-mono text-xl font-medium text-parchment-foreground touch-manipulation transition-[transform,background-color] duration-[80ms] ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-45';
+const KEY_PRESSED = 'bg-parchment/[0.78]';
+// Next key: the cap inverts (ground fill, primary legend, 2 px primary edge). No glow, no pulse.
+const KEY_NEXT = 'border-2 border-primary bg-background font-bold text-primary';
 
 /**
  * On-screen keyboard for one-handed typing. Renders whatever layout it is
@@ -75,12 +77,18 @@ export default function OneHandKeyboard({
   onAssist,
   onBackspace,
   onInvalidChord,
+  onMirrorChange,
 }: OneHandKeyboardProps) {
   const [pressed, setPressed] = useState<ReadonlySet<string>>(new Set());
 
   // Mirror: 'once' = next character key only, 'locked' = until tapped again.
   const [mirrorMode, setMirrorMode] = useState<'off' | 'once' | 'locked'>('off');
   const lastMirrorTap = useRef(0);
+  const mirrorChangeRef = useRef(onMirrorChange);
+  mirrorChangeRef.current = onMirrorChange;
+  useEffect(() => {
+    mirrorChangeRef.current?.(mirrorMode);
+  }, [mirrorMode]);
   const mirrorActive = mirrorMode !== 'off' && mirrorLayout !== null;
   const shown = mirrorActive && mirrorLayout ? mirrorLayout : layout;
 
@@ -235,7 +243,7 @@ export default function OneHandKeyboard({
     },
   });
 
-  const motionClass = (id: string) => (pressed.has(id) ? (reduceMotion ? KEY_PRESSED : `${KEY_PRESSED} scale-95`) : '');
+  const motionClass = (id: string) => (pressed.has(id) ? (reduceMotion ? KEY_PRESSED : `${KEY_PRESSED} scale-[0.96]`) : '');
 
   const renderKey = (k: KeyboardKey) => {
     const id = k.key.toLowerCase();
@@ -250,16 +258,14 @@ export default function OneHandKeyboard({
         data-layer={mirrorActive ? 'mirror' : 'primary'}
         data-next={isNext ? 'true' : undefined}
         disabled={disabled}
-        className={cn(KEY_BASE, 'flex-1 basis-[44px] max-w-[76px]', motionClass(id), isNext && KEY_NEXT)}
-        style={
-          !isNext && token ? { boxShadow: `inset 0 -3px 0 hsl(var(${token}) / 0.35)` } : undefined
-        }
+        className={cn(KEY_BASE, 'flex-1 basis-[44px]', motionClass(id), isNext && KEY_NEXT)}
+        style={!isNext && token ? { borderBottomColor: `hsl(var(${token}))` } : undefined}
         {...keyHandlers(id, () => pressLayoutKey(k))}
       >
         {keyLabel(k)}
         {isNext && needsUpper && !chorded && (
-          <span aria-hidden="true" className="absolute right-1 top-0.5 text-[0.65rem] font-bold text-primary">
-            {'⇧'}
+          <span aria-hidden="true" className="absolute right-1 top-1 text-primary">
+            <ArrowBigUp className="h-3.5 w-3.5" />
           </span>
         )}
       </button>
@@ -282,8 +288,8 @@ export default function OneHandKeyboard({
           disabled={disabled}
           className={cn(
             KEY_BASE,
-            'flex-[1.3] flex-col gap-0 text-[0.7rem] leading-tight',
-            mirrorMode !== 'off' ? 'border-primary bg-primary text-primary-foreground' : 'bg-secondary',
+            'flex-[3] flex-col gap-0.5 text-[0.8125rem] font-medium leading-[1.125rem]',
+            mirrorMode !== 'off' && 'bg-primary text-primary-foreground',
             mirrorHint && highlightNext && !disabled && KEY_NEXT,
             motionClass('mirror'),
           )}
@@ -291,7 +297,7 @@ export default function OneHandKeyboard({
         >
           <span className="relative flex items-center">
             <FlipHorizontal2 aria-hidden="true" className="h-5 w-5" />
-            {mirrorMode === 'locked' && <Lock aria-hidden="true" data-testid="mirror-lock" className="absolute -right-3 -top-2 h-3 w-3" />}
+            {mirrorMode === 'locked' && <Lock aria-hidden="true" data-testid="mirror-lock" strokeWidth={2.5} className="absolute -right-3.5 -top-2 h-[13px] w-[13px]" />}
           </span>
           <span aria-hidden="true">Mirror</span>
         </button>
@@ -301,7 +307,8 @@ export default function OneHandKeyboard({
         aria-label="Space"
         data-next={spaceNext ? 'true' : undefined}
         disabled={disabled}
-        className={cn(KEY_BASE, 'flex-[3] text-sm', motionClass('space'), spaceNext && KEY_NEXT)}
+        className={cn(KEY_BASE, mirrorLayout ? (showEnter ? 'flex-[4]' : 'flex-[6]') : 'flex-[2]', 'text-base', motionClass('space'), spaceNext && KEY_NEXT)}
+        style={!spaceNext ? { borderBottomColor: 'hsl(var(--chart-1))' } : undefined}
         {...keyHandlers('space', () => onChar(' '))}
       >
         <span aria-hidden="true" className="tracking-widest">
@@ -314,7 +321,7 @@ export default function OneHandKeyboard({
           aria-label="Enter"
           data-next={enterNext ? 'true' : undefined}
           disabled={disabled}
-          className={cn(KEY_BASE, 'flex-1', motionClass('enter'), enterNext && KEY_NEXT)}
+          className={cn(KEY_BASE, mirrorLayout ? 'flex-[2]' : 'flex-1', motionClass('enter'), enterNext && KEY_NEXT)}
           {...keyHandlers('enter', () => onChar('\n'))}
         >
           <CornerDownLeft aria-hidden="true" className="h-5 w-5" />
@@ -324,7 +331,7 @@ export default function OneHandKeyboard({
         type="button"
         aria-label="Backspace"
         disabled={disabled}
-        className={cn(KEY_BASE, 'flex-1 bg-muted', motionClass('backspace'))}
+        className={cn(KEY_BASE, mirrorLayout ? 'flex-[3]' : 'flex-1', motionClass('backspace'))}
         {...keyHandlers('backspace', onBackspace, true)}
       >
         <Delete aria-hidden="true" className="h-5 w-5" />
@@ -345,7 +352,7 @@ export default function OneHandKeyboard({
       {chorded && (
         <p
           data-testid="chord-hint"
-          className="rounded-lg bg-primary/10 px-3 py-1.5 text-center text-sm text-foreground"
+          className="rounded-lg bg-secondary px-3 py-1.5 text-center text-sm text-foreground"
         >
           {!expected ? null : chord ? (
             <>
@@ -366,7 +373,7 @@ export default function OneHandKeyboard({
       )}
 
       {mirrorHint && expected && (
-        <p data-testid="mirror-caption" className="text-center text-xs text-muted-foreground">
+        <p data-testid="mirror-caption" className="min-h-5 text-center text-sm text-muted-foreground">
           {mirrorActive ? 'Mirror is on' : 'Mirror'} for <span className="font-mono font-bold text-primary">{charName(expected)}</span>
           {mirrorActive ? ': tap Mirror to switch back' : ''}
         </p>
@@ -376,7 +383,7 @@ export default function OneHandKeyboard({
       <div
         key={mirrorActive ? 'mirror' : 'primary'}
         className="flex flex-col gap-1.5"
-        style={!reduceMotion ? { animation: 'kb-flip 160ms ease-out' } : undefined}
+        style={!reduceMotion ? { animation: 'kb-flip 160ms ease-out', transformOrigin: hand === 'left' ? 'right center' : 'left center' } : undefined}
       >
         {rows.map((row, ri) => (
           <div key={ri} className="flex flex-wrap justify-center gap-1.5">
@@ -392,7 +399,7 @@ export default function OneHandKeyboard({
           aria-label={`Insert ${charName(expected)} (not available on this layout)`}
           disabled={disabled}
           onClick={onAssist}
-          className="min-h-[48px] rounded-xl border border-dashed border-primary px-3 text-sm font-medium text-primary touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="min-h-[48px] rounded-lg border border-dashed border-primary px-4 text-base font-medium text-primary touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           Insert <span className="font-mono font-bold">{charName(expected)}</span>
           <span className="ml-1 text-muted-foreground">(not on this layout)</span>

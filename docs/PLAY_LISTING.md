@@ -8,7 +8,7 @@ Final app name: **One-Type**. Play title below sets it apart from the unrelated 
 - **Short description (max 80):** `Learn to type fast with one hand. Free, offline, no ads, no accounts.` (68)
 - **Category:** Education (app type: App)
 - **Tags:** Education, Typing, Accessibility, Productivity (choose the closest available in Console)
-- **Contact email:** wilmymoise@gmail.com
+- **Contact email:** Lot9services@gmail.com
 - **Website:** https://will-41.github.io/OneHandType3/
 - **Privacy policy URL:** https://will-41.github.io/OneHandType3/privacy
 - **Default language:** English (United States)
@@ -46,7 +46,7 @@ PRIVATE BY DESIGN
 - The app collects no personal data and has no ads, no in-app purchases and no sign-in
 - Delete everything at any time by clearing app storage or uninstalling
 
-One-Type is free. Feedback and ideas are welcome at wilmymoise@gmail.com.
+One-Type is free. Feedback and ideas are welcome at Lot9services@gmail.com.
 ```
 
 (about 1,500 characters; limit 4000)

@@ -10,8 +10,8 @@ const __dirname = dirname(__filename);
 // Single source of truth for the app name (final name pending trademark search).
 const APP_NAME = "One-Type";
 const DESCRIPTION = "Learn to type fast with one hand — offline, private, free.";
-const BACKGROUND_COLOR = "#0f101a"; // hsl(232 28% 8%) — dark background token
-const THEME_COLOR = "#0f101a";
+const BACKGROUND_COLOR = "#16120d"; // hsl(30 26% 7%), the dark background token
+const THEME_COLOR = "#16120d";
 
 // "/" for normal hosting, "/OneHandType3/" for GitHub Pages.
 let base = process.env.BASE_PATH || "/";

@@ -1,24 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { cn } from '../lib/utils';
 import { useTypingStore } from '../lib/stores/useTypingStore';
-import { regionAccent, regionAccentAlpha } from '../lib/theme';
-import {
-  Crown,
-  Sword,
-  Shield,
-  Lock,
-  CheckCircle,
-  Play,
-  Star,
-  Map as MapIcon,
-  ArrowRight,
-  ChevronDown,
-} from 'lucide-react';
+import { regionAccent } from '../lib/theme';
+import { Lock, Check, Play, ChevronDown } from 'lucide-react';
 import {
   gamifiedCurriculum,
   type CurriculumLevel,
@@ -32,15 +18,6 @@ interface RealmLessonNavigatorProps {
 }
 
 const TOTAL_LESSONS = gamifiedCurriculum.reduce((sum, level) => sum + level.lessons.length, 0);
-
-function getRegionIcon(level: CurriculumLevel) {
-  const region = level.storyTheme.region.toLowerCase();
-  if (region.includes('hearth')) return <Shield className="h-5 w-5" aria-hidden="true" />;
-  if (region.includes('bloom')) return <Star className="h-5 w-5" aria-hidden="true" />;
-  if (region.includes('realms') || region.includes('crown')) return <Crown className="h-5 w-5" aria-hidden="true" />;
-  if (region.includes('tidebreak')) return <Sword className="h-5 w-5" aria-hidden="true" />;
-  return <MapIcon className="h-5 w-5" aria-hidden="true" />;
-}
 
 export default function RealmLessonNavigator({ onStartLesson, className }: RealmLessonNavigatorProps) {
   const completedLessons = useTypingStore((s) => s.completedLessons);
@@ -79,145 +56,127 @@ export default function RealmLessonNavigator({ onStartLesson, className }: Realm
   };
 
   return (
-    <div className={cn('space-y-6', className)}>
-      <div className="space-y-2 text-center">
-        <h2 className="flex items-center justify-center gap-2 text-2xl font-bold">
-          <Crown className="h-6 w-6 text-accent" aria-hidden="true" />
-          The Ten Realms of Typing
-        </h2>
-        <p className="text-muted-foreground">
+    <div className={cn('flex flex-col gap-8', className)}>
+      <section className="flex flex-col gap-3">
+        <h2 className="font-display text-2xl font-medium leading-[1.875rem]">The Ten Realms of Typing</h2>
+        <p className="text-base text-muted-foreground">
           Master the art of one-handed typing through your journey across the Ten Realms
         </p>
-        <Progress value={overallPercent} className="mx-auto max-w-md" aria-label="Overall curriculum progress" />
-        <p className="text-sm text-muted-foreground">
+        <Progress value={overallPercent} aria-label="Overall curriculum progress" />
+        <p className="text-sm leading-5 text-muted-foreground">
           Overall progress: {overallPercent}% ({completedCount} of {TOTAL_LESSONS} lessons)
         </p>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
         {gamifiedCurriculum.map((level, levelIndex) => {
           const unlocked = isLevelUnlocked(levelIndex);
           const progress = levelProgress(level);
           const isCompleted = progress === 100;
           const expanded = selectedLevel === level.id && unlocked;
           const panelId = `realm-panel-${level.id}`;
+          const StateGlyph = isCompleted ? Check : unlocked ? Play : Lock;
 
           return (
-            <Card
+            <article
               key={level.id}
-              className={cn(
-                'overflow-hidden border-l-4 transition-shadow',
-                unlocked ? 'hover:shadow-lg' : 'opacity-70',
-                expanded && 'ring-2 ring-primary'
-              )}
-              style={{ borderLeftColor: regionAccent(level.id) }}
+              className={cn('overflow-hidden rounded-lg border bg-card', !unlocked && 'text-muted-foreground')}
             >
               <button
                 type="button"
-                className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex w-full flex-col gap-3 p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                 aria-expanded={expanded}
                 aria-controls={panelId}
                 aria-disabled={!unlocked}
                 onClick={() => unlocked && setSelectedLevel(expanded ? null : level.id)}
               >
-                <CardHeader className="pb-3">
-                  <span className="sr-only">
-                    {unlocked ? '' : 'Locked. '}
-                    {`Level ${levelIndex + 1}. ${progress}% complete.`}
+                <span className="sr-only">
+                  {unlocked ? '' : 'Locked. '}
+                  {`Level ${levelIndex + 1}. ${progress}% complete.`}
+                </span>
+                <div className="flex items-start gap-3">
+                  <span
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                    style={{ background: regionAccent(level.id), color: '#1d140d' }}
+                  >
+                    <StateGlyph aria-hidden="true" className="h-5 w-5" strokeWidth={2.5} />
                   </span>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-                        style={{ background: regionAccentAlpha(level.id, 0.18), color: regionAccent(level.id) }}
-                      >
-                        {getRegionIcon(level)}
-                      </span>
-                      <div>
-                        <CardTitle className="text-lg leading-tight">{level.title}</CardTitle>
-                        <CardDescription className="text-sm">{level.storyTheme.region}</CardDescription>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      {!unlocked && <Lock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />}
-                      {isCompleted && <CheckCircle className="h-4 w-4 text-success" aria-hidden="true" />}
-                      {unlocked && (
-                        <ChevronDown
-                          className={cn('h-4 w-4 text-muted-foreground transition-transform', expanded && 'rotate-180')}
-                          aria-hidden="true"
-                        />
-                      )}
-                      <Badge variant={isCompleted ? 'default' : 'secondary'} className="text-xs">
-                        Level {levelIndex + 1}
-                      </Badge>
-                    </div>
+                  <div className="min-w-0 flex-1">
+                    <div className={cn('font-bold leading-snug', unlocked && 'text-foreground')}>{level.title}</div>
+                    <div className="text-sm leading-5 text-muted-foreground">{level.storyTheme.region}</div>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-3 pb-4">
-                  <p className="line-clamp-2 text-sm text-muted-foreground">{level.storyTheme.storyline}</p>
-                  <Progress value={progress} className="h-2" aria-hidden="true" />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{progress}% complete</span>
-                    <span>{level.lessons.length} lessons</span>
-                  </div>
-                  {!unlocked && (
-                    <p className="text-xs text-muted-foreground">Complete the previous realm to unlock.</p>
+                  <span className="inline-flex h-6 shrink-0 items-center whitespace-nowrap rounded-md border border-input px-2 text-sm font-bold text-foreground">
+                    Level {levelIndex + 1}
+                  </span>
+                  {unlocked && (
+                    <ChevronDown
+                      className={cn('h-5 w-5 shrink-0 text-foreground transition-transform', expanded && 'rotate-180')}
+                      aria-hidden="true"
+                    />
                   )}
-                </CardContent>
+                </div>
+                <p className="line-clamp-2 text-sm leading-5 text-muted-foreground">{level.storyTheme.storyline}</p>
+                <Progress value={progress} aria-hidden="true" />
+                <div className="flex justify-between text-sm leading-5">
+                  <span className={isCompleted ? 'font-bold text-success' : 'text-muted-foreground'}>{progress}% complete</span>
+                  <span className="text-muted-foreground">{level.lessons.length} lessons</span>
+                </div>
+                {!unlocked && <p className="text-sm leading-5 text-muted-foreground">Complete the previous realm to unlock.</p>}
               </button>
 
               {expanded && (
-                <CardContent id={panelId} className="space-y-2 border-t pt-4">
-                  <h3 className="text-sm font-medium">Lessons</h3>
-                  {level.lessons.map((lesson, lessonIndex) => {
-                    const lessonUnlocked = isLessonUnlocked(levelIndex, lessonIndex);
-                    const lessonCompleted = completed.has(lesson.id);
-                    return (
-                      <Button
-                        key={lesson.id}
-                        variant={lessonCompleted ? 'default' : 'outline'}
-                        className={cn(
-                          'h-auto min-h-[48px] w-full justify-between py-2 text-left',
-                          !lessonUnlocked && 'cursor-not-allowed opacity-50'
-                        )}
-                        onClick={() => lessonUnlocked && startLesson(lesson)}
-                        disabled={!lessonUnlocked}
-                      >
-                        <span className="flex items-center gap-2">
-                          {lessonCompleted ? (
-                            <CheckCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-                          ) : lessonUnlocked ? (
-                            <Play className="h-4 w-4 shrink-0" aria-hidden="true" />
-                          ) : (
-                            <Lock className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <div id={panelId} className="flex flex-col gap-2 px-4 pb-4">
+                  <h3 className="mt-2 text-lg font-bold leading-[1.625rem] text-foreground">Lessons</h3>
+                  <div className="divide-y divide-border border-y">
+                    {level.lessons.map((lesson, lessonIndex) => {
+                      const lessonUnlocked = isLessonUnlocked(levelIndex, lessonIndex);
+                      const lessonCompleted = completed.has(lesson.id);
+                      return (
+                        <button
+                          key={lesson.id}
+                          type="button"
+                          className={cn(
+                            'flex min-h-[56px] w-full items-center gap-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                            lessonUnlocked ? 'active:bg-secondary' : 'cursor-not-allowed text-muted-foreground',
                           )}
-                          <span>
-                            <span className="block text-sm font-medium">{lesson.title}</span>
-                            <span className="block text-xs opacity-80">
+                          onClick={() => lessonUnlocked && startLesson(lesson)}
+                          disabled={!lessonUnlocked}
+                        >
+                          <span className={cn('flex h-6 w-6 shrink-0 items-center justify-center', lessonCompleted ? 'text-success' : lessonUnlocked ? 'text-primary' : 'text-muted-foreground')}>
+                            {lessonCompleted ? (
+                              <Check className="h-5 w-5" aria-hidden="true" />
+                            ) : lessonUnlocked ? (
+                              <Play className="h-5 w-5" aria-hidden="true" />
+                            ) : (
+                              <Lock className="h-[18px] w-[18px]" aria-hidden="true" />
+                            )}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className={cn('block font-medium', lessonUnlocked && 'text-foreground')}>{lesson.title}</span>
+                            <span className="block text-sm leading-5 text-muted-foreground">
                               {lesson.storyTheme.character} &bull; {lesson.storyTheme.guild}
                             </span>
                           </span>
-                        </span>
-                        <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      </Button>
-                    );
-                  })}
-                </CardContent>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
-            </Card>
+            </article>
           );
         })}
       </div>
 
-      <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <Lock className="h-3 w-3" aria-hidden="true" /> Locked
+      <div className="flex flex-wrap items-center gap-4 text-sm leading-5" aria-label="Legend">
+        <span className="flex items-center gap-1 text-muted-foreground">
+          <Lock className="h-4 w-4" aria-hidden="true" /> Locked
         </span>
-        <span className="flex items-center gap-1">
-          <Play className="h-3 w-3" aria-hidden="true" /> Available
+        <span className="flex items-center gap-1 text-primary">
+          <Play className="h-4 w-4" aria-hidden="true" /> <span className="text-foreground">Available</span>
         </span>
-        <span className="flex items-center gap-1">
-          <CheckCircle className="h-3 w-3 text-success" aria-hidden="true" /> Completed
+        <span className="flex items-center gap-1 text-success">
+          <Check className="h-4 w-4" aria-hidden="true" /> <span className="text-foreground">Completed</span>
         </span>
       </div>
     </div>

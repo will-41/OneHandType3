@@ -13,7 +13,7 @@ const ROUTES = ['/', '/curriculum', '/practice', '/stats', '/settings', '/settin
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const STORE_KEY = 'onehandtype-store';
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || '/opt/pw-browsers/chromium' });
 const errors = [];
 const apiCalls = [];
 

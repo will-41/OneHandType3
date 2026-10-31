@@ -58,7 +58,7 @@ function SheetBody({ mode, rowLabel, initialChar, initialFinger, usedChars, onOp
           Type one character and pick the finger that should press it.
         </DrawerDescription>
       </DrawerHeader>
-      <div className="space-y-4 px-4">
+      <div className="space-y-4 px-5">
         <div className="space-y-1.5">
           <Label htmlFor="key-char">Character</Label>
           <Input
@@ -73,7 +73,7 @@ function SheetBody({ mode, rowLabel, initialChar, initialFinger, usedChars, onOp
             aria-describedby="key-char-hint"
             className="h-12 text-center font-mono text-xl"
           />
-          <p id="key-char-hint" className={`text-sm ${taken ? 'text-destructive' : 'text-muted-foreground'}`}>
+          <p id="key-char-hint" className={`text-sm leading-5 ${taken ? 'text-destructive' : 'text-muted-foreground'}`}>
             {!valid
               ? 'Enter exactly one printable character.'
               : taken
@@ -87,7 +87,7 @@ function SheetBody({ mode, rowLabel, initialChar, initialFinger, usedChars, onOp
             id="key-finger"
             value={finger}
             onChange={(e) => setFinger(e.target.value)}
-            className="h-12 w-full rounded-md border border-input bg-background px-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-12 w-full rounded-lg border border-input bg-background px-4 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <option value="">Not assigned</option>
             {FINGERS.map((f) => (

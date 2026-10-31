@@ -1,7 +1,6 @@
-import { useMemo, type ReactNode } from 'react';
+import { useMemo } from 'react';
 import { useLocation } from 'wouter';
-import { BarChart3, Gauge, Target, CheckCircle2, Sparkles, Clock, Trophy, Lock, ChevronDown } from 'lucide-react';
-import { Card } from '../components/ui/card';
+import { Lock, ChevronDown } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Progress } from '../components/ui/progress';
 import PageContainer from '../components/shell/PageContainer';
@@ -11,26 +10,23 @@ import { gamifiedCurriculum } from '../lib/gamifiedCurriculum';
 import { staticLessons } from '../lib/lessons';
 import { achievements, achievementCategoryLabels } from '../lib/achievements';
 
-
 const lessonTitles = new Map<string, string>([
   ...staticLessons.map((l) => [l.id, l.title] as [string, string]),
   ...gamifiedCurriculum.flatMap((lv) => lv.lessons.map((l) => [l.id, l.title] as [string, string])),
 ]);
 
-function StatCard({ icon, label, value, hint }: { icon: ReactNode; label: string; value: string; hint?: string }) {
+/** One cell of the summary card: label, mono figure, optional hint. */
+function Cell({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <Card className="p-4">
-      <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-        <span aria-hidden="true" className="text-primary">
-          {icon}
-        </span>
-        {label}
-      </div>
-      <div className="text-3xl font-bold tabular-nums">{value}</div>
-      {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
-    </Card>
+    <div className="flex flex-col gap-1 p-4">
+      <span className="text-sm leading-5 text-muted-foreground">{label}</span>
+      <span className="font-mono text-[2rem] font-medium leading-[2.375rem] tabular-nums">{value}</span>
+      {hint && <span className="text-sm leading-5 text-muted-foreground">{hint}</span>}
+    </div>
   );
 }
+
+const H2 = 'text-lg font-bold leading-[1.625rem]';
 
 export default function StatsPage() {
   const [, navigate] = useLocation();
@@ -65,78 +61,73 @@ export default function StatsPage() {
 
   return (
     <PageContainer>
-      <PageHeader title="Stats" description="Your progress, stored privately on this device." icon={<BarChart3 className="h-5 w-5" />} />
+      <PageHeader title="Stats" description="Your progress, stored privately on this device." />
 
       {!hasData && (
-        <Card className="mb-6 p-8 text-center">
-          <p className="mb-1 font-medium">No results yet</p>
-          <p className="mb-4 text-sm text-muted-foreground">Finish a lesson and your stats will appear here.</p>
+        <div className="mb-6 flex flex-col items-start gap-1 rounded-lg border bg-card p-4">
+          <p className="text-lg font-bold leading-snug">No results yet</p>
+          <p className="mb-3 text-base text-muted-foreground">Finish a lesson and your stats will appear here.</p>
           <Button className="min-h-[48px]" onClick={() => navigate('/curriculum')}>
             Start learning
           </Button>
-        </Card>
+        </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon={<Gauge className="h-4 w-4" />} label="Best WPM" value={String(Math.round(stats.bestWpm))} />
-        <StatCard icon={<Target className="h-4 w-4" />} label="Best accuracy" value={`${Math.round(stats.bestAccuracy)}%`} />
-        <StatCard
-          icon={<CheckCircle2 className="h-4 w-4" />}
-          label="Lessons completed"
-          value={String(completedLessons.length)}
-          hint={`of ${staticLessons.length + gamifiedCurriculum.reduce((n, l) => n + l.lessons.length, 0)} available`}
-        />
-        <StatCard icon={<Clock className="h-4 w-4" />} label="Time practised" value={`${minutes} min`} />
-      </div>
+      {/* Summary: one card, four cells divided by hairlines */}
+      <section aria-label="Summary">
+        <div className="grid grid-cols-2 divide-x divide-border rounded-lg border bg-card lg:grid-cols-4 [&>*:nth-child(n+3)]:border-t [&>*:nth-child(n+3)]:border-border lg:[&>*:nth-child(n+3)]:border-t-0 [&>*:nth-child(3)]:border-l-0 lg:[&>*:nth-child(3)]:border-l">
+          <Cell label="Best WPM" value={String(Math.round(stats.bestWpm))} />
+          <Cell label="Best accuracy" value={`${Math.round(stats.bestAccuracy)}%`} />
+          <Cell
+            label="Lessons completed"
+            value={String(completedLessons.length)}
+            hint={`of ${staticLessons.length + gamifiedCurriculum.reduce((n, l) => n + l.lessons.length, 0)} available`}
+          />
+          <Cell label="Time practised" value={`${minutes} min`} />
+        </div>
+      </section>
 
-      <Card className="mt-4 p-5">
-        <div className="mb-2 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-semibold">
-            <Sparkles className="h-4 w-4 text-accent" aria-hidden="true" />
-            Level {level}
-          </div>
-          <span className="text-sm tabular-nums text-muted-foreground">{xp} XP total</span>
+      <div className="mt-3 flex flex-col gap-3 rounded-lg border bg-card p-4">
+        <div className="flex items-center justify-between gap-3">
+          <span className={H2}>Level {level}</span>
+          <span className="font-mono tabular-nums text-muted-foreground">{xp} XP total</span>
         </div>
         <Progress value={(xpIntoLevel / xpForLevel) * 100} aria-label={`Level ${level} progress`} />
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="text-sm leading-5 text-muted-foreground">
           {levelEnd - xp} XP to level {level + 1}. Earn XP by completing lessons, with bonuses for speed and accuracy.
         </p>
-      </Card>
+      </div>
 
-      <section aria-labelledby="stats-achievements" className="mt-8">
-        <h2 id="stats-achievements" className="mb-1 flex items-center gap-2 text-lg font-semibold">
-          <Trophy className="h-5 w-5 text-primary" aria-hidden="true" />
-          Achievements
-          <span className="text-sm font-normal text-muted-foreground">
-            {unlockedList.length} of {achievements.length}
-          </span>
-        </h2>
-        <p className="mb-3 text-sm text-muted-foreground">
-          Earned through practice, accuracy and progress. No timers, no daily streaks, nothing to lose.
-        </p>
+      <section aria-labelledby="stats-achievements" className="mt-8 flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
+          <h2 id="stats-achievements" className={H2}>
+            Achievements{' '}
+            <span className="font-normal text-muted-foreground">
+              {unlockedList.length} of {achievements.length}
+            </span>
+          </h2>
+          <p className="text-sm leading-5 text-muted-foreground">
+            Earned through practice, accuracy and progress. No timers, no daily streaks, nothing to lose.
+          </p>
+        </div>
 
         {unlockedList.length === 0 ? (
-          <p className="mb-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+          <p className="rounded-lg border border-dashed border-input p-4 text-base text-muted-foreground">
             Your first achievement is one lesson away.
           </p>
         ) : (
-          <ul className="mb-3 space-y-2" aria-label="Unlocked achievements">
+          <ul className="divide-y divide-border overflow-hidden rounded-lg border bg-card" aria-label="Unlocked achievements">
             {unlockedList.map((a) => {
               const when = achievementDates[a.id];
               return (
-                <li key={a.id} className="flex items-start gap-3 rounded-xl border border-primary/40 bg-card p-3">
-                  <span aria-hidden="true" className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-                    <Trophy className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="font-medium">{a.title}</div>
-                    <div className="text-sm text-muted-foreground">{a.description}</div>
-                    {when && (
-                      <div className="mt-0.5 text-xs text-muted-foreground">
-                        Unlocked <time dateTime={new Date(when).toISOString()}>{new Date(when).toLocaleDateString()}</time>
-                      </div>
-                    )}
-                  </div>
+                <li key={a.id} className="flex min-h-[56px] flex-col px-4 py-2">
+                  <span className="font-medium">{a.title}</span>
+                  <span className="text-sm leading-5 text-muted-foreground">{a.description}</span>
+                  {when && (
+                    <span className="text-sm leading-5 text-muted-foreground">
+                      Unlocked <time dateTime={new Date(when).toISOString()}>{new Date(when).toLocaleDateString()}</time>
+                    </span>
+                  )}
                 </li>
               );
             })}
@@ -144,21 +135,21 @@ export default function StatsPage() {
         )}
 
         {lockedList.length > 0 && (
-          <details className="group rounded-xl border border-border bg-card">
-            <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-4 py-2 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+          <details className="group overflow-hidden rounded-lg border bg-card">
+            <summary className="flex min-h-[48px] cursor-pointer list-none items-center justify-between gap-3 px-4 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
               <span>Still to explore ({lockedList.length})</span>
-              <ChevronDown aria-hidden="true" className="h-4 w-4 transition-transform group-open:rotate-180" />
+              <ChevronDown aria-hidden="true" className="h-5 w-5 transition-transform group-open:rotate-180" />
             </summary>
-            <ul className="space-y-1 border-t border-border p-2" aria-label="Locked achievements">
+            <ul className="divide-y divide-border border-t" aria-label="Locked achievements">
               {lockedList.map((a) => (
-                <li key={a.id} className="flex items-start gap-3 rounded-lg px-2 py-2">
+                <li key={a.id} className="flex items-start gap-3 px-4 py-3">
                   <Lock aria-hidden="true" className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0">
-                    <div className="text-sm font-medium text-muted-foreground">
+                    <div className="font-medium text-muted-foreground">
                       {a.title} <span className="sr-only">(locked)</span>
-                      <span className="ml-1 text-xs font-normal">· {achievementCategoryLabels[a.category]}</span>
+                      <span className="ml-1 text-sm font-normal">· {achievementCategoryLabels[a.category]}</span>
                     </div>
-                    <div className="text-xs text-muted-foreground">{a.requirement}</div>
+                    <div className="text-sm leading-5 text-muted-foreground">{a.requirement}</div>
                   </div>
                 </li>
               ))}
@@ -167,25 +158,25 @@ export default function StatsPage() {
         )}
       </section>
 
-      <section aria-labelledby="stats-recent" className="mt-8">
-        <h2 id="stats-recent" className="mb-3 text-lg font-semibold">
+      <section aria-labelledby="stats-recent" className="mt-8 flex flex-col gap-3">
+        <h2 id="stats-recent" className={H2}>
           Recent lessons
         </h2>
         {lessonBests.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nothing here yet.</p>
+          <p className="text-base text-muted-foreground">Nothing here yet.</p>
         ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+          <ul className="divide-y divide-border overflow-hidden rounded-lg border bg-card">
             {lessonBests.map(([id, v]) => (
-              <li key={id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <li key={id} className="flex min-h-[56px] items-center justify-between gap-3 px-4 py-2">
                 <div className="min-w-0">
-                  <div className="truncate font-medium">{lessonTitles.get(id) ?? id}</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="font-medium">{lessonTitles.get(id) ?? id}</div>
+                  <div className="text-sm leading-5 text-muted-foreground">
                     {v.attempts} attempt{v.attempts === 1 ? '' : 's'}
                   </div>
                 </div>
-                <div className="shrink-0 text-right text-sm tabular-nums">
-                  <div>{Math.round(v.bestWpm)} WPM</div>
-                  <div className="text-xs text-muted-foreground">{Math.round(v.bestAccuracy)}% acc</div>
+                <div className="flex shrink-0 flex-col items-end">
+                  <span className="font-mono font-medium tabular-nums">{Math.round(v.bestWpm)} WPM</span>
+                  <span className="text-sm leading-5 text-muted-foreground">{Math.round(v.bestAccuracy)}% acc</span>
                 </div>
               </li>
             ))}

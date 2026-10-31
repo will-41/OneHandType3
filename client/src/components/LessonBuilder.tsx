@@ -212,7 +212,7 @@ export default function LessonBuilder({ onSave, onClose, existingLesson, classNa
   const field = (name: string) => (errors[name] ? 'border-destructive' : '');
   const errorText = (name: string) =>
     errors[name] ? (
-      <p id={`lb-${name}-err`} role="alert" className="mt-1 text-xs text-destructive">
+      <p id={`lb-${name}-err`} role="alert" className="mt-1 text-sm font-medium leading-5 text-destructive">
         {errors[name]}
       </p>
     ) : null;
@@ -221,20 +221,19 @@ export default function LessonBuilder({ onSave, onClose, existingLesson, classNa
     <div className={cn('w-full space-y-4', className)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="flex items-center gap-2 text-lg font-semibold">
-            <BookOpen className="h-5 w-5" aria-hidden="true" />
-            {existingLesson ? 'Edit lesson' : 'New lesson'}
+          <h3 className="text-lg font-bold leading-[1.625rem]">
+                        {existingLesson ? 'Edit lesson' : 'New lesson'}
           </h3>
           <p className="text-sm text-muted-foreground">Write your own text to practice.</p>
         </div>
         <div className="flex gap-2">
           <Button type="button" variant="outline" className="min-h-[48px] gap-2" onClick={() => setPreview((p) => !p)}>
-            {preview ? <Pencil className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+            {preview ? <Pencil className="h-5 w-5" aria-hidden="true" /> : <Eye className="h-5 w-5" aria-hidden="true" />}
             {preview ? 'Edit' : 'Preview'}
           </Button>
           {onClose && (
             <Button type="button" variant="ghost" className="min-h-[48px] gap-2" onClick={onClose}>
-              <X className="h-4 w-4" aria-hidden="true" /> Close
+              <X className="h-5 w-5" aria-hidden="true" /> Close
             </Button>
           )}
         </div>
@@ -253,7 +252,7 @@ export default function LessonBuilder({ onSave, onClose, existingLesson, classNa
           <p className="text-sm text-muted-foreground">
             {lesson.targetWpm} WPM &middot; {words} words &middot; {lesson.hands.join(' & ') || 'no'} hand
           </p>
-          <p className="rounded-lg border border-border bg-muted/40 p-3 font-mono text-base leading-relaxed">
+          <p className="rounded-lg border bg-background p-3 font-mono text-base leading-relaxed">
             {lesson.content || 'No text yet.'}
           </p>
         </Card>
@@ -300,7 +299,7 @@ export default function LessonBuilder({ onSave, onClose, existingLesson, classNa
               aria-describedby={errors.content ? 'lb-content-err' : undefined}
             />
             {errorText('content')}
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 font-mono text-[0.8125rem] leading-[1.125rem] text-muted-foreground">
               {lesson.content.length} characters &middot; {words} words
             </p>
           </div>
@@ -312,7 +311,7 @@ export default function LessonBuilder({ onSave, onClose, existingLesson, classNa
                 id="lb-category"
                 value={lesson.category}
                 onChange={(e) => update('category', e.target.value as Category)}
-                className="mt-1 h-12 w-full rounded-md border border-input bg-background px-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="mt-1 h-12 w-full rounded-lg border border-input bg-background px-4 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {CATEGORIES.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -391,9 +390,9 @@ export default function LessonBuilder({ onSave, onClose, existingLesson, classNa
                       type="button"
                       aria-label={`Remove focus key ${k}`}
                       onClick={() => update('focusKeys', lesson.focusKeys.filter((x) => x !== k))}
-                      className="flex min-h-[44px] items-center gap-1 rounded-md border border-border bg-muted px-3 font-mono text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="flex min-h-[44px] items-center gap-1 rounded-md border border-input bg-transparent px-3 font-mono text-base font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      {k} <X className="h-3 w-3" aria-hidden="true" />
+                      {k} <X className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </li>
                 ))}
@@ -404,24 +403,24 @@ export default function LessonBuilder({ onSave, onClose, existingLesson, classNa
       )}
 
       {notice && (
-        <p role="status" className="text-sm text-muted-foreground">
+        <p role="status" className="text-sm leading-5 text-muted-foreground">
           {notice}
         </p>
       )}
 
       <div className="flex flex-wrap gap-2">
         <Button type="button" className="min-h-[48px] flex-1 gap-2" onClick={handleSave}>
-          <Save className="h-4 w-4" aria-hidden="true" /> Save lesson
+          <Save className="h-5 w-5" aria-hidden="true" /> Save lesson
         </Button>
         <Button type="button" variant="outline" className="min-h-[48px] gap-2" onClick={() => { setLesson(existingLesson ? fromLesson(existingLesson) : blankDraft()); setErrors({}); setNotice(''); }}>
-          <RotateCcw className="h-4 w-4" aria-hidden="true" /> Reset
+          <RotateCcw className="h-5 w-5" aria-hidden="true" /> Reset
         </Button>
         <Button type="button" variant="outline" className="min-h-[48px] gap-2" onClick={handleExport}>
-          <Download className="h-4 w-4" aria-hidden="true" /> Export
+          <Download className="h-5 w-5" aria-hidden="true" /> Export
         </Button>
         <input ref={fileRef} type="file" accept="application/json,.json" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={handleImport} />
         <Button type="button" variant="outline" className="min-h-[48px] gap-2" onClick={() => fileRef.current?.click()}>
-          <Upload className="h-4 w-4" aria-hidden="true" /> Import
+          <Upload className="h-5 w-5" aria-hidden="true" /> Import
         </Button>
       </div>
     </div>

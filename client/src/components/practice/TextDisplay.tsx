@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useRef } from 'react';
+import { CornerDownLeft } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface TextDisplayProps {
@@ -37,27 +38,25 @@ type CharState = 'pending' | 'correct' | 'incorrect' | 'current';
 const CharCell = memo(function CharCell({ ch, state }: { ch: string; state: CharState }) {
   const isSpace = ch === ' ';
   const isNewline = ch === '\n';
-  // Spaces and newlines get a visible marker only when relevant (current / wrong).
-  let shown = ch;
-  if (isSpace) shown = state === 'incorrect' || state === 'current' ? '␣' : ' ';
-  if (isNewline) shown = '↵';
+  // A space shows a bracket marker only when it is the current or a wrong character; a newline shows its return arrow.
+  const spaceMarker = isSpace && (state === 'current' || state === 'incorrect');
 
   return (
     <span
       data-state={state}
       data-current={state === 'current' ? 'true' : undefined}
       className={cn(
-        'inline-block whitespace-pre rounded-[0.2em] text-center',
-        state === 'pending' && 'text-muted-foreground/70',
+        'relative inline-flex h-11 min-w-[1ch] items-center justify-center whitespace-pre align-top',
+        state === 'pending' && 'text-muted-foreground',
         state === 'correct' && 'text-foreground',
-        state === 'incorrect' &&
-          'bg-destructive/15 text-destructive underline decoration-2 underline-offset-[0.2em]',
-        state === 'current' && 'practice-caret bg-primary/15 text-foreground',
-        (isNewline || (isSpace && state !== 'incorrect' && state !== 'current')) && 'opacity-60',
+        state === 'incorrect' && 'text-destructive underline decoration-2 underline-offset-[6px]',
+        // The caret is a 2 px bar at the left edge of the current character.
+        state === 'current' && 'text-muted-foreground before:absolute before:-left-px before:top-2 before:h-7 before:w-0.5 before:bg-foreground before:content-[""]',
+        spaceMarker && 'after:absolute after:inset-x-[3px] after:bottom-2.5 after:h-[5px] after:border-2 after:border-t-0 after:border-muted-foreground after:content-[""]',
+        isNewline && 'text-muted-foreground',
       )}
-      style={{ minWidth: '1ch' }}
     >
-      {shown}
+      {isNewline ? <CornerDownLeft aria-hidden="true" className="h-[18px] w-[18px]" /> : ch}
     </span>
   );
 });
@@ -91,13 +90,9 @@ export default function TextDisplay({ text, typed, reduceMotion }: TextDisplayPr
     <div
       ref={boxRef}
       data-testid="practice-text"
-      className="relative mx-auto max-h-[8.6em] w-full max-w-3xl overflow-hidden font-mono text-[1.375rem] leading-[2.15] tracking-normal sm:text-[1.75rem]"
+      className="relative mx-auto max-h-[11rem] w-full max-w-3xl overflow-hidden font-mono text-[1.5rem] leading-none tracking-normal"
       aria-hidden="true"
     >
-      <style>{`
-        @keyframes practice-caret { 0%,100% { box-shadow: inset 0 -0.14em 0 hsl(var(--primary)); } 50% { box-shadow: inset 0 -0.14em 0 hsl(var(--primary) / 0.25); } }
-        .practice-caret { animation: practice-caret 1.1s ease-in-out infinite; box-shadow: inset 0 -0.14em 0 hsl(var(--primary)); }
-      `}</style>
       {groups.map((g) => {
         const cells: JSX.Element[] = [];
         for (let i = g.start; i < g.end; i++) {

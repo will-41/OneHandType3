@@ -6,7 +6,7 @@ physically requires **you** (your identity, your accounts, your money). Each tak
 ## What you have
 
 - **The app** (`client/`): one-handed typing trainer. 10-realm "Realm of Keys" curriculum
-  (29 lessons) + 25 practice lessons, 8 one-hand keyboard layouts with a Mirror key, ARTSEY
+  (29 lessons) + 23 practice lessons, 8 one-hand keyboard layouts with a Mirror key, ARTSEY
   chords, a custom keyboard builder, custom lessons, fair achievements, onboarding tour,
   dark/light mode, high contrast, text sizes, left-hand mirror mode. Works fully offline.
 - **No server, no database, no accounts, no ads, no tracking.** Nothing to host or pay for.

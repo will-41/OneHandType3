@@ -12,19 +12,19 @@ export type HandSide = 'left' | 'right';
 
 /** Region accent colours (HSL triplets) keyed by curriculum level id. */
 export const REGION_ACCENTS: Record<string, string> = {
-  'level-1-hearthlands': '24 90% 58%',
-  'level-2-silverflow': '200 80% 58%',
-  'level-3-bloomvale': '145 55% 48%',
-  'level-4-gildmoor': '45 85% 56%',
-  'level-5-stormcrest': '225 75% 66%',
-  'level-6-skyreach': '190 70% 56%',
-  'level-7-sunscar': '10 80% 62%',
-  'level-8-tidebreak': '175 65% 46%',
-  'level-9-frostmarch': '265 75% 72%',
-  'level-10-crown-of-keys': '48 95% 60%',
+  'level-1-hearthlands': '19 81% 69%',
+  'level-2-silverflow': '194 55% 70%',
+  'level-3-bloomvale': '109 39% 65%',
+  'level-4-gildmoor': '41 74% 65%',
+  'level-5-stormcrest': '211 63% 69%',
+  'level-6-skyreach': '182 51% 72%',
+  'level-7-sunscar': '33 70% 68%',
+  'level-8-tidebreak': '165 49% 61%',
+  'level-9-frostmarch': '234 47% 80%',
+  'level-10-crown-of-keys': '289 54% 76%',
 };
 
-export const DEFAULT_REGION_ACCENT = '252 90% 72%';
+export const DEFAULT_REGION_ACCENT = '33 82% 66%';
 
 export function regionAccent(levelId: string): string {
   return `hsl(${REGION_ACCENTS[levelId] ?? DEFAULT_REGION_ACCENT})`;
@@ -68,7 +68,7 @@ export function useDocumentTheme(): void {
     root.classList.toggle('dark', themeMode === 'dark');
     root.style.colorScheme = themeMode;
     const meta = document.querySelector('meta[name="theme-color"]');
-    meta?.setAttribute('content', themeMode === 'dark' ? '#0e1020' : '#faf7f0');
+    meta?.setAttribute('content', themeMode === 'dark' ? '#16120d' : '#f8f4ec');
   }, [themeMode]);
 
   useEffect(() => {

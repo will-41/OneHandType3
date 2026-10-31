@@ -8,7 +8,7 @@ const fail = (msg) => { console.error('WAVE-B FAIL:', msg); process.exit(1); };
 const ok = (msg) => console.log('  ✓', msg);
 
 const BASICS_1 = 'f f f f f f f f f f f f f f f f f f f f';
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || '/opt/pw-browsers/chromium' });
 const errors = [];
 const apiCalls = [];
 
