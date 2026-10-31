@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   Download,
   Eraser,
-  Keyboard as KeyboardIcon,
   Pencil,
   Plus,
   RotateCcw,
@@ -78,7 +77,7 @@ export default function KeyboardBuilderPage() {
   if (id && !loaded.current) {
     return (
       <PageContainer className="max-w-2xl">
-        <PageHeader title="Layout not found" description="This custom layout no longer exists." icon={<KeyboardIcon className="h-5 w-5" />} />
+        <PageHeader title="Layout not found" description="This custom layout no longer exists." />
         <Button asChild className="min-h-[48px]">
           <Link href="/settings">Back to settings</Link>
         </Button>
@@ -308,13 +307,13 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
 
   const backButton = (
     <Button type="button" variant="ghost" className="-ml-2 mb-2 min-h-[48px] gap-2" onClick={goBack}>
-      <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to settings
+      <ArrowLeft className="h-5 w-5" aria-hidden="true" /> Back to settings
     </Button>
   );
 
   const importErrorEl = importError ? (
-    <p role="alert" className="mt-3 flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> {importError}
+    <p role="alert" className="mt-3 flex items-start gap-3 rounded-lg border border-destructive bg-card px-4 py-3 text-base text-foreground">
+      <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" aria-hidden="true" /> {importError}
     </p>
   ) : null;
 
@@ -323,7 +322,7 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
     return (
       <PageContainer className="max-w-2xl">
         {backButton}
-        <PageHeader title="New keyboard layout" description="Design a key arrangement that fits your reach." icon={<KeyboardIcon className="h-5 w-5" />} />
+        <PageHeader title="New keyboard layout" description="Design a key arrangement that fits your reach." />
         {hiddenInput}
         <StartStep initialHand={meta.hand} uiHand={storeHand} onStart={startFrom} onImport={() => fileRef.current?.click()} />
         {importErrorEl}
@@ -341,7 +340,7 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
       <PageHeader
         title={initial ? 'Edit layout' : 'Design your layout'}
         description={`Based on ${baseName}, ${meta.hand} hand.`}
-        icon={<KeyboardIcon className="h-5 w-5" />}
+       
       />
       {hiddenInput}
 
@@ -362,8 +361,8 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
           </p>
         </section>
 
-        <section className="space-y-3 rounded-xl border border-border bg-card p-3" aria-label="Layout editor">
-          <div role="tablist" aria-label="Editor mode" className="flex gap-1 rounded-lg bg-muted p-1">
+        <section className="space-y-3 rounded-lg border bg-card p-3" aria-label="Layout editor">
+          <div role="tablist" aria-label="Editor mode" className="flex gap-1 rounded-lg border border-input bg-background p-1">
             {(
               [
                 ['edit', 'Edit layout'],
@@ -381,8 +380,8 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
                   if (id === 'test') restartTest();
                 }}
                 className={cn(
-                  'min-h-[48px] flex-1 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  tab === id ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground',
+                  'min-h-[44px] flex-1 rounded-md px-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  tab === id ? 'bg-primary font-bold text-primary-foreground' : 'font-medium text-foreground',
                 )}
               >
                 {label}
@@ -392,16 +391,16 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
 
           {tab === 'test' && (
             <div className="rounded-lg border border-border bg-background p-3" aria-label="Test drive">
-              <p className="mb-2 text-sm text-muted-foreground">
+              <p className="mb-2 text-sm leading-5 text-muted-foreground">
                 Tap the highlighted key to type the sample. {!hasSpace && 'Spaces are skipped because this layout has no Space key.'}
               </p>
-              <p className="break-words font-mono text-xl leading-relaxed" aria-label={`Sample text: ${SAMPLE}`}>
+              <p className="break-words font-mono text-2xl leading-8 tracking-[0.02em]" aria-label={`Sample text: ${SAMPLE}`}>
                 {[...SAMPLE].map((ch, i) => (
                   <span
                     key={i}
                     className={cn(
-                      i < cur && 'text-success',
-                      i === cur && 'rounded bg-accent px-0.5 text-accent-foreground',
+                      i < cur && 'text-foreground',
+                      i === cur && 'border-b-2 border-foreground text-foreground',
                       i > cur && 'text-muted-foreground',
                     )}
                   >
@@ -419,7 +418,7 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
                   </Button>
                 )}
                 <Button type="button" variant="outline" className="min-h-[48px] gap-2" onClick={restartTest}>
-                  <RotateCcw className="h-4 w-4" aria-hidden="true" /> Restart
+                  <RotateCcw className="h-5 w-5" aria-hidden="true" /> Restart
                 </Button>
               </div>
             </div>
@@ -432,6 +431,7 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
             highlightKey={tab === 'test' ? target : null}
             onKeyPress={onKeyPress}
             label={tab === 'edit' ? 'Layout editor keys' : 'Test drive keys'}
+            hand={meta.hand}
           />
 
           {tab === 'edit' && (
@@ -449,7 +449,7 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
                     className="min-h-[48px] gap-2"
                     onClick={() => setSheet({ mode: 'edit', row: selected.row, col: selected.col })}
                   >
-                    <Pencil className="h-4 w-4" aria-hidden="true" /> Edit key
+                    <Pencil className="h-5 w-5" aria-hidden="true" /> Edit key
                   </Button>
                   <Button
                     type="button"
@@ -460,17 +460,17 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
                       setSelected(null);
                     }}
                   >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" /> Remove key
+                    <Trash2 className="h-5 w-5" aria-hidden="true" /> Remove key
                   </Button>
                 </div>
               )}
 
               <div className="flex flex-wrap gap-2">
                 <Button type="button" variant="outline" className="min-h-[48px] gap-2" onClick={undo} disabled={history.length === 0}>
-                  <Undo2 className="h-4 w-4" aria-hidden="true" /> Undo
+                  <Undo2 className="h-5 w-5" aria-hidden="true" /> Undo
                 </Button>
                 <Button type="button" variant="outline" className="min-h-[48px] gap-2" onClick={resetToBase}>
-                  <RotateCcw className="h-4 w-4" aria-hidden="true" /> Reset to base
+                  <RotateCcw className="h-5 w-5" aria-hidden="true" /> Reset to base
                 </Button>
                 <Button
                   type="button"
@@ -479,13 +479,13 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
                   onClick={() => commit(addRow(draft), 'Row added.')}
                   disabled={!canAddRow(draft)}
                 >
-                  <Plus className="h-4 w-4" aria-hidden="true" /> Add row
+                  <Plus className="h-5 w-5" aria-hidden="true" /> Add row
                 </Button>
               </div>
 
-              <ul className="divide-y divide-border rounded-lg border border-border" aria-label="Rows">
+              <ul className="divide-y divide-border border-y border-border" aria-label="Rows">
                 {draft.map((r, i) => (
-                  <li key={i} className="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5">
+                  <li key={i} className="flex flex-wrap items-center justify-between gap-2 py-1.5">
                     <span className="text-sm">
                       Row {i + 1} <span className="text-muted-foreground">&middot; {r.length}/10 keys</span>
                     </span>
@@ -498,7 +498,7 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
                         disabled={!canAddKey(draft, i)}
                         onClick={() => setSheet({ mode: 'add', row: i, col: r.length })}
                       >
-                        <Plus className="h-4 w-4" aria-hidden="true" /> Add key
+                        <Plus className="h-5 w-5" aria-hidden="true" /> Add key
                       </Button>
                       {r.length === 0 && (
                         <Button
@@ -511,7 +511,7 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
                             setSelected(null);
                           }}
                         >
-                          <Eraser className="h-4 w-4" aria-hidden="true" /> Remove row
+                          <Eraser className="h-5 w-5" aria-hidden="true" /> Remove row
                         </Button>
                       )}
                     </span>
@@ -526,20 +526,20 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
         </section>
 
         <section aria-label="Layout checks" className="space-y-2">
-          <h2 className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Checks</h2>
+          <h2 className="text-lg font-bold leading-[1.625rem]">Checks</h2>
           {errors.length === 0 && warnings.length === 0 && (
-            <p className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 text-sm">
-              <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" /> Looks good. Every letter has a key.
+            <p className="flex items-start gap-3 rounded-lg border border-success bg-card px-4 py-3 text-base">
+              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-hidden="true" /> Looks good. Every letter has a key.
             </p>
           )}
           {errors.map((m) => (
-            <p key={m} role="alert" className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> {m}
+            <p key={m} role="alert" className="flex items-start gap-3 rounded-lg border border-destructive bg-card px-4 py-3 text-base text-foreground">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" aria-hidden="true" /> {m}
             </p>
           ))}
           {warnings.map((m) => (
-            <p key={m} className="flex items-start gap-2 rounded-lg border border-accent/50 bg-accent/10 p-3 text-sm">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden="true" /> {m}
+            <p key={m} className="flex items-start gap-3 rounded-lg border border-primary bg-card px-4 py-3 text-base">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" /> {m}
             </p>
           ))}
         </section>
@@ -547,17 +547,17 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
         <section aria-label="Save and share" className="space-y-3">
           <div className={cn('flex flex-wrap gap-2', mirrorRow(storeHand))}>
             <Button type="button" className="min-h-[48px] flex-1 gap-2" onClick={save} disabled={!canSave}>
-              <Save className="h-4 w-4" aria-hidden="true" /> Save layout
+              <Save className="h-5 w-5" aria-hidden="true" /> Save layout
             </Button>
             <Button type="button" variant="outline" className="min-h-[48px] gap-2" onClick={exportJson}>
-              <Download className="h-4 w-4" aria-hidden="true" /> Export JSON
+              <Download className="h-5 w-5" aria-hidden="true" /> Export JSON
             </Button>
             <Button type="button" variant="outline" className="min-h-[48px] gap-2" onClick={() => fileRef.current?.click()}>
-              <Upload className="h-4 w-4" aria-hidden="true" /> Import JSON
+              <Upload className="h-5 w-5" aria-hidden="true" /> Import JSON
             </Button>
           </div>
           {!canSave && (
-            <p className="text-sm text-muted-foreground">Fix the problems above to save. Warnings never block saving.</p>
+            <p className="text-sm leading-5 text-muted-foreground">Fix the problems above to save. Warnings never block saving.</p>
           )}
           {importErrorEl}
         </section>
@@ -593,11 +593,11 @@ function Builder({ initial }: { initial: CustomKeyboardLayout | null }) {
               &ldquo;{trimmedName}&rdquo; is saved on this device. Use it for practice right away?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel className="min-h-[48px]" onClick={() => finishSaved(false)}>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => finishSaved(false)}>
               Not now
             </AlertDialogCancel>
-            <AlertDialogAction className="min-h-[48px]" onClick={() => finishSaved(true)}>
+            <AlertDialogAction onClick={() => finishSaved(true)}>
               Use this layout now
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -615,9 +615,9 @@ function LeaveDialog({ open, onOpenChange, onLeave }: { open: boolean; onOpenCha
           <AlertDialogTitle>Discard your changes?</AlertDialogTitle>
           <AlertDialogDescription>You have unsaved changes to this layout. If you leave now they will be lost.</AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="gap-2">
-          <AlertDialogCancel className="min-h-[48px]">Keep editing</AlertDialogCancel>
-          <AlertDialogAction className="min-h-[48px]" onClick={onLeave}>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep editing</AlertDialogCancel>
+          <AlertDialogAction className="bg-destructive text-destructive-foreground active:bg-destructive/80" onClick={onLeave}>
             Discard and leave
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -642,7 +642,7 @@ function StartStep({
   return (
     <div className="space-y-6">
       <section aria-labelledby="start-from">
-        <h2 id="start-from" className="mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h2 id="start-from" className="mb-3 text-lg font-bold leading-[1.625rem]">
           Step 1 &middot; Start from
         </h2>
         <div role="radiogroup" aria-label="Start from layout" className="grid gap-2">
@@ -656,15 +656,20 @@ function StartStep({
                 aria-checked={on}
                 onClick={() => setBase(l.id as BuiltInLayoutId)}
                 className={cn(
-                  'min-h-[56px] rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  on ? 'border-primary bg-primary/10 ring-1 ring-primary' : 'border-border bg-card hover:bg-muted',
+                  'flex min-h-[56px] items-start gap-3 rounded-lg bg-card text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  on ? 'border-2 border-primary p-[15px]' : 'border border-input p-4',
                 )}
               >
-                <span className="block font-medium">
-                  {l.name}
-                  {l.specialized ? ' (one-hand)' : ''}
+                <span aria-hidden="true" className={cn('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2', on ? 'border-primary' : 'border-input')}>
+                  {on && <span className="h-2.5 w-2.5 rounded-full bg-primary" />}
                 </span>
-                <span className="block text-sm text-muted-foreground">{l.description}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium">
+                    {l.name}
+                    {l.specialized ? ' (one-hand)' : ''}
+                  </span>
+                  <span className="block text-sm leading-5 text-muted-foreground">{l.description}</span>
+                </span>
               </button>
             );
           })}
@@ -672,10 +677,10 @@ function StartStep({
       </section>
 
       <section aria-labelledby="which-hand" className="space-y-2">
-        <h2 id="which-hand" className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h2 id="which-hand" className="text-lg font-bold leading-[1.625rem]">
           Which hand?
         </h2>
-        <div role="radiogroup" aria-label="Hand for this layout" className="flex gap-1 rounded-lg bg-muted p-1">
+        <div role="radiogroup" aria-label="Hand for this layout" className="flex gap-1 rounded-lg border border-input bg-background p-1">
           {(['left', 'right'] as const).map((h) => (
             <button
               key={h}
@@ -684,8 +689,8 @@ function StartStep({
               aria-checked={hand === h}
               onClick={() => setHand(h)}
               className={cn(
-                'min-h-[48px] flex-1 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                hand === h ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground',
+                'min-h-[44px] flex-1 rounded-md px-2 text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                hand === h ? 'bg-primary font-bold text-primary-foreground' : 'font-medium text-foreground',
               )}
             >
               {h === 'left' ? 'Left hand' : 'Right hand'}
@@ -699,7 +704,7 @@ function StartStep({
           Start designing
         </Button>
         <Button type="button" variant="outline" className="min-h-[48px] gap-2" onClick={onImport}>
-          <Upload className="h-4 w-4" aria-hidden="true" /> Import JSON
+          <Upload className="h-5 w-5" aria-hidden="true" /> Import JSON
         </Button>
       </div>
     </div>

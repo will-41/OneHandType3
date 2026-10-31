@@ -17,6 +17,8 @@ export interface KeyboardGridProps {
   onKeyPress?: (row: number, col: number) => void;
   className?: string;
   label?: string;
+  /** Typing hand of the layout; the quiet mirror axis sits on its inner edge. */
+  hand?: 'left' | 'right';
 }
 
 const FINGER_SHORT: Record<string, string> = {
@@ -53,6 +55,7 @@ export default function KeyboardGrid({
   onKeyPress,
   className,
   label = 'Keyboard layout',
+  hand,
 }: KeyboardGridProps) {
   const cols = Math.max(
     1,
@@ -61,7 +64,11 @@ export default function KeyboardGrid({
   const target = highlightKey ? highlightKey.toLowerCase() : null;
 
   return (
-    <div role="group" aria-label={label} className={cn('max-w-full overflow-x-auto rounded-xl', className)}>
+    <div
+      role="group"
+      aria-label={label}
+      className={cn('max-w-full overflow-x-auto', hand && 'border-input', hand === 'left' ? 'border-r-2 pr-2.5' : hand === 'right' ? 'border-l-2 pl-2.5' : '', className)}
+    >
       <div className="mx-auto flex w-fit min-w-full flex-col gap-1.5 p-1">
         {layout.map((row, r) => {
           const offset = row.length > 0 ? row[0].position ?? 0 : 0;
@@ -75,7 +82,7 @@ export default function KeyboardGrid({
             >
               {row.length === 0 && (
                 <div
-                  className="flex min-h-[48px] items-center justify-center rounded-lg border border-dashed border-border text-xs text-muted-foreground"
+                  className="flex min-h-[48px] items-center justify-center rounded-lg border border-dashed border-input text-sm text-muted-foreground"
                   style={{ gridColumn: `1 / span ${cols}` }}
                 >
                   Empty row
@@ -96,20 +103,20 @@ export default function KeyboardGrid({
                     onClick={() => onKeyPress?.(r, c)}
                     style={{ gridColumn: `${offset + c + 1}` }}
                     className={cn(
-                      'relative flex min-h-[48px] min-w-[44px] flex-col items-center justify-center rounded-lg border px-1 py-1 text-base font-semibold leading-none transition-colors',
+                      'relative flex min-h-[64px] min-w-[44px] flex-col items-center justify-center gap-0.5 rounded-md px-1 py-1 transition-colors',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                       blank
-                        ? 'border-dashed border-border bg-muted/40 text-muted-foreground'
-                        : 'border-border bg-card text-card-foreground hover:bg-muted',
-                      isTarget && 'border-accent bg-accent text-accent-foreground',
-                      isSelected && 'border-primary bg-primary/15 ring-2 ring-primary ring-offset-2 ring-offset-background',
+                        ? 'border-2 border-dashed border-input bg-transparent text-muted-foreground'
+                        : 'bg-parchment text-parchment-foreground active:bg-parchment/80',
+                      isTarget && 'bg-accent text-accent-foreground',
+                      isSelected && 'outline outline-[3px] outline-offset-2 outline-primary',
                     )}
                   >
-                    <span aria-hidden="true" className={cn(k.key === ' ' && 'text-xs')}>
+                    <span aria-hidden="true" className={cn('font-mono text-xl font-medium leading-6', k.key === ' ' && 'text-sm')}>
                       {blank ? '·' : keyLabel(k.key, k.displayKey)}
                     </span>
                     {showFingers && finger && !blank && (
-                      <span aria-hidden="true" className="mt-0.5 text-[9px] font-normal uppercase tracking-wide opacity-70">
+                      <span aria-hidden="true" className="text-[0.8125rem] font-normal leading-[1.125rem]">
                         {finger}
                       </span>
                     )}

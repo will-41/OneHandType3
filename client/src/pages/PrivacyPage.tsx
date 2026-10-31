@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 
 const EFFECTIVE_DATE = "2026-10-21";
-const CONTACT_EMAIL = "wilmymoise@gmail.com";
+const CONTACT_EMAIL = "Lot9services@gmail.com";
 
 const SECTIONS: { heading: string; body: string[] }[] = [
   {
@@ -57,16 +57,16 @@ const SUMMARY = [
 export default function PrivacyPage() {
   return (
     <div className="text-foreground">
-      <article className="mx-auto max-w-prose px-4 py-8 leading-relaxed sm:py-12">
+      <article className="mx-auto max-w-prose px-5 py-8 leading-relaxed sm:py-12">
         <Link
           href="/settings"
-          className="mb-8 inline-flex min-h-[48px] items-center gap-2 rounded-md text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="mb-8 inline-flex min-h-[44px] items-center gap-2 rounded-md font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           Back to Settings
         </Link>
 
-        <h1 className="mb-2 text-3xl font-bold tracking-tight">Privacy Policy</h1>
+        <h1 className="mb-2 font-display text-[2rem] font-medium leading-[2.375rem] tracking-[-0.01em]">Privacy Policy</h1>
         <p className="mb-6 text-sm text-muted-foreground">
           Effective date: {EFFECTIVE_DATE}
         </p>
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
           never sends anything off your device.
         </p>
 
-        <h2 className="mb-2 mt-8 text-xl font-semibold">Summary</h2>
+        <h2 className="mb-2 mt-8 text-lg font-bold leading-[1.625rem]">Summary</h2>
         <ul className="list-disc space-y-1 pl-6">
           {SUMMARY.map((item) => (
             <li key={item}>{item}</li>
@@ -84,7 +84,7 @@ export default function PrivacyPage() {
 
         {SECTIONS.map((s) => (
           <section key={s.heading}>
-            <h2 className="mb-2 mt-8 text-xl font-semibold">{s.heading}</h2>
+            <h2 className="mb-2 mt-8 text-lg font-bold leading-[1.625rem]">{s.heading}</h2>
             {s.body.map((p) => (
               <p key={p}>{p}</p>
             ))}
@@ -92,12 +92,12 @@ export default function PrivacyPage() {
         ))}
 
         <section>
-          <h2 className="mb-2 mt-8 text-xl font-semibold">Contact</h2>
+          <h2 className="mb-2 mt-8 text-lg font-bold leading-[1.625rem]">Contact</h2>
           <p>
             Questions? Email{" "}
             <a
               href={`mailto:${CONTACT_EMAIL}`}
-              className="text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="font-bold text-primary underline decoration-1 underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {CONTACT_EMAIL}
             </a>

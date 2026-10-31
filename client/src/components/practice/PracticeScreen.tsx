@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
-import { ArrowLeft, RotateCcw, Zap, Target, Gauge } from 'lucide-react';
+import { ArrowLeft, RotateCcw } from 'lucide-react';
 import { useTypingStore } from '../../lib/stores/useTypingStore';
 import { resolveLayout } from '../../lib/customLayouts';
 import { getAchievementById } from '../../lib/achievements';
@@ -25,21 +25,18 @@ export interface PracticeScreenProps {
 }
 
 const iconBtn =
-  'inline-flex h-12 w-12 items-center justify-center rounded-xl text-foreground touch-manipulation transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+  'inline-flex h-11 w-11 items-center justify-center rounded-lg text-foreground touch-manipulation transition-colors active:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 function humanizeId(id: string): string {
   return id.replace(/[-_]+/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
 }
 
-function Pill({ icon, label, value, testId }: { icon: React.ReactNode; label: string; value: string; testId: string }) {
+function Readout({ label, value, testId, muted }: { label: string; value: string; testId: string; muted?: boolean }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm" data-testid={testId}>
-      <span aria-hidden="true" className="text-primary">
-        {icon}
-      </span>
-      <span className="font-semibold tabular-nums text-foreground">{value}</span>
-      <span className="text-xs text-muted-foreground">{label}</span>
-    </div>
+    <span className="inline-flex items-baseline gap-1.5" data-testid={testId}>
+      <b className={cn('font-mono text-xl font-medium leading-7 tabular-nums', muted ? 'text-muted-foreground' : 'text-foreground')}>{value}</b>
+      <i className="text-sm not-italic leading-5 text-muted-foreground">{label}</i>
+    </span>
   );
 }
 
@@ -71,6 +68,8 @@ export default function PracticeScreen({ lessonId, title, text: rawText, targetW
 
   const [results, setResults] = useState<ResultsData | null>(null);
   const [flash, setFlash] = useState<{ ch: string; n: number } | null>(null);
+  // Mirror state, reported by the keyboard, colours the mirror axis (input while off, primary while on).
+  const [mirrorOn, setMirrorOn] = useState(false);
   const [announcement, setAnnouncement] = useState('');
   const mainRef = useRef<HTMLDivElement>(null);
   const restartRef = useRef<HTMLButtonElement>(null);
@@ -211,12 +210,12 @@ export default function PracticeScreen({ lessonId, title, text: rawText, targetW
   if (text.length === 0) {
     return (
       <div className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 bg-background px-6 text-center text-foreground">
-        <h1 className="text-xl font-semibold">Nothing to practice here yet</h1>
+        <h1 className="font-display text-2xl font-medium leading-[1.875rem]">Nothing to practice here yet</h1>
         <p className="max-w-sm text-muted-foreground">This lesson has no text. Pick another lesson to keep practicing.</p>
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-primary px-5 font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex min-h-[48px] items-center gap-2 rounded-lg bg-primary px-5 font-bold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ArrowLeft aria-hidden="true" className="h-5 w-5" />
           Go back
@@ -229,54 +228,70 @@ export default function PracticeScreen({ lessonId, title, text: rawText, targetW
 
   return (
     <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-background text-foreground">
-      <div ref={mainRef} className="flex min-h-0 flex-1 flex-col">
+      {/* The mirror axis: one 2 px rule on the inner edge of the live half keyboard. Input while Mirror is off, primary while on. */}
+      <div
+        aria-hidden="true"
+        data-testid="mirror-axis"
+        data-mirror={mirrorOn ? 'on' : 'off'}
+        className={cn(
+          'pointer-events-none absolute bottom-0 top-4 w-[var(--mirror-axis)] transition-colors duration-150',
+          leftHand ? 'right-2' : 'left-2',
+          mirrorOn ? 'bg-primary' : 'bg-input',
+        )}
+      />
+      <div ref={mainRef} className={cn('flex min-h-0 flex-1 flex-col', leftHand ? 'pl-3 pr-5' : 'pl-5 pr-3')}>
         {/* Top bar: controls sit on the thumb side */}
-        <header className={cn('flex shrink-0 items-center gap-1 px-2 pt-[max(0.25rem,env(safe-area-inset-top))]', leftHand ? 'flex-row' : 'flex-row-reverse')}>
+        <header
+          className={cn(
+            'flex min-h-[60px] shrink-0 items-center gap-1 pt-[max(1rem,env(safe-area-inset-top))]',
+            leftHand ? '-ml-1 flex-row' : '-mr-1 flex-row-reverse',
+          )}
+        >
           <div className={cn('flex items-center', leftHand ? 'flex-row' : 'flex-row-reverse')}>
             <button type="button" onClick={onBack} aria-label="Back" className={iconBtn}>
-              <ArrowLeft aria-hidden="true" className="h-5 w-5" />
+              <ArrowLeft aria-hidden="true" className="h-[22px] w-[22px]" />
             </button>
             <button ref={restartRef} type="button" onClick={restart} aria-label="Restart lesson" className={iconBtn}>
-              <RotateCcw aria-hidden="true" className="h-5 w-5" />
+              <RotateCcw aria-hidden="true" className="h-[22px] w-[22px]" />
             </button>
           </div>
-          <h1 className={cn('min-w-0 flex-1 truncate px-2 text-base font-semibold', leftHand ? 'text-left' : 'text-left')}>{title}</h1>
+          <h1 className="min-w-0 flex-1 break-words px-2 text-left font-display text-2xl font-medium leading-[1.875rem]">{title}</h1>
         </header>
 
-        {/* Progress hairline */}
+        {/* Progress: a 4 px square bar, foreground fill on a secondary track */}
         <div
           role="progressbar"
           aria-label="Lesson progress"
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={stats.progress}
-          className="mx-4 h-1 shrink-0 overflow-hidden rounded-full bg-muted"
+          className="mt-3 h-1 shrink-0 overflow-hidden bg-secondary"
         >
-          <div className="h-full rounded-full bg-primary transition-[width] duration-150" style={{ width: `${stats.progress}%` }} />
+          <div className="h-full bg-foreground transition-[width] duration-150" style={{ width: `${stats.progress}%` }} />
         </div>
 
-        {/* Stats pills */}
-        <div className="flex shrink-0 flex-wrap items-center justify-center gap-2 px-3 py-2" data-testid="practice-stats">
-          {settings.showWPM && <Pill testId="stat-wpm" icon={<Zap className="h-4 w-4" />} value={String(stats.wpm)} label="WPM" />}
-          {settings.showAccuracy && <Pill testId="stat-accuracy" icon={<Target className="h-4 w-4" />} value={`${stats.accuracy}%`} label="accuracy" />}
-          <Pill testId="stat-progress" icon={<Gauge className="h-4 w-4" />} value={`${stats.progress}%`} label="done" />
+        {/* Readouts: one line, figure and label */}
+        <div className="mt-4 flex shrink-0 flex-wrap items-baseline gap-x-6 gap-y-1" data-testid="practice-stats">
+          {settings.showWPM && <Readout testId="stat-wpm" value={String(stats.wpm)} label="WPM" muted={status === 'paused'} />}
+          {settings.showAccuracy && <Readout testId="stat-accuracy" value={`${stats.accuracy}%`} label="accuracy" muted={status === 'paused'} />}
+          <Readout testId="stat-progress" value={`${stats.progress}%`} label="done" muted={status === 'paused'} />
           <div role="status" aria-live="polite" aria-atomic="true" className="sr-only" data-testid="practice-live">
             {announcement}
           </div>
         </div>
 
         {/* Text */}
-        <section aria-label="Typing area" className="flex min-h-0 flex-1 flex-col justify-center px-4 py-2">
+        <section aria-label="Typing area" className="flex min-h-0 flex-1 flex-col justify-center gap-2">
           <p className="sr-only">Lesson text: {text.replace(/\n/g, ' ')}</p>
           <TextDisplay text={text} typed={typed} reduceMotion={reduceMotion} />
-          <p className="mt-2 h-5 text-center text-xs text-muted-foreground" aria-hidden="true">
+          <p className="min-h-5 text-left text-sm leading-5 text-muted-foreground" aria-hidden="true">
             {status === 'idle' && 'Start typing to begin. The timer starts on your first key.'}
             {status === 'paused' && 'Paused. Keep typing to resume.'}
           </p>
         </section>
 
-        {/* Keyboard: bottom thumb zone */}
-        <div className="shrink-0 border-t border-border bg-card/70 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur">
+        {/* Keyboard: bottom thumb zone, no panel behind it */}
+        <div className="shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
           <OneHandKeyboard
             layout={layout}
             mirrorLayout={mirrorLayout}
@@ -292,6 +307,7 @@ export default function PracticeScreen({ lessonId, title, text: rawText, targetW
             onAssist={onAssist}
             onBackspace={onBackspace}
             onInvalidChord={onInvalidChord}
+            onMirrorChange={(m) => setMirrorOn(m !== 'off')}
           />
         </div>
       </div>

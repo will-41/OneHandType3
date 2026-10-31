@@ -48,7 +48,7 @@ const seed = {
   version: 1,
 };
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || '/opt/pw-browsers/chromium' });
 
 async function newPage(viewport, scale) {
   const ctx = await browser.newContext({
@@ -133,29 +133,30 @@ const go = async (page, path) => { await page.goto(`${base}${path}`, { waitUntil
   await snap(page, 'tablet7-2-practice.png', W, H, S);
   await ctx.close();
 }
-await browser.close();
-
 // ---- Feature graphic 1024x500 ----
-const iconB64 = readFileSync(join(root, 'client/public/icons/play-store-512.png')).toString('base64');
-const font = 'Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif';
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="500" viewBox="0 0 1024 500">
-<defs>
-<linearGradient id="g" x1="0" y1="0" x2="1024" y2="500" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#4338ca"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient>
-<clipPath id="r"><rect x="70" y="100" width="300" height="300" rx="66"/></clipPath>
-</defs>
-<rect width="1024" height="500" fill="url(#g)"/>
-<circle cx="930" cy="60" r="220" fill="#ffffff" opacity="0.06"/>
-<circle cx="980" cy="470" r="160" fill="#ffffff" opacity="0.06"/>
-<rect x="76" y="116" width="300" height="300" rx="66" fill="#1e1b4b" opacity="0.35"/>
-<image x="70" y="100" width="300" height="300" xlink:href="data:image/png;base64,${iconB64}" clip-path="url(#r)"/>
-<text x="430" y="238" font-family='${font}' font-size="64" font-weight="700" fill="#ffffff">Type fast</text>
-<text x="430" y="310" font-family='${font}' font-size="64" font-weight="700" fill="#ffffff">with one hand</text>
-<text x="432" y="370" font-family='${font}' font-size="30" fill="#e0e7ff">Free  •  Offline  •  Private</text>
-</svg>`;
-await sharp(Buffer.from(svg)).png().toFile(join(root, 'docs/store/feature-graphic.png'));
+// Rendered in the browser so it uses the app's own bundled fonts.
+const fontB64 = (pkg, file) => readFileSync(join(root, 'node_modules/@fontsource', pkg, 'files', file)).toString('base64');
+const logoSvg = readFileSync(join(root, 'client/public/logo.svg'), 'utf8');
+const fgPage = await browser.newPage({ viewport: { width: 1024, height: 500 }, deviceScaleFactor: 1 });
+await fgPage.setContent(`<!doctype html><meta charset="utf-8"><style>
+@font-face{font-family:Literata;font-weight:500;src:url(data:font/woff2;base64,${fontB64('literata', 'literata-latin-500-normal.woff2')})}
+@font-face{font-family:Atkinson;font-weight:400;src:url(data:font/woff2;base64,${fontB64('atkinson-hyperlegible-next', 'atkinson-hyperlegible-next-latin-400-normal.woff2')})}
+html,body{margin:0;width:1024px;height:500px;background:#16120d;color:#eee6d7;overflow:hidden}
+.mark{position:absolute;left:76px;top:120px;width:260px;height:260px}
+.axis{position:absolute;left:396px;top:64px;bottom:64px;width:2px;background:#efaf61}
+.copy{position:absolute;left:444px;top:50%;transform:translateY(-50%)}
+h1{margin:0;font:500 64px/76px Literata,serif;letter-spacing:-.01em}
+p{margin:24px 0 0;font:400 28px/36px Atkinson,sans-serif;color:hsl(32 12% 72%)}
+</style><div class="mark">${logoSvg.replace('width="512" height="512"', 'width="260" height="260"')}</div><div class="axis"></div>
+<div class="copy"><h1>Type fast<br>with one hand</h1><p>Free  •  Offline  •  Private</p></div>`);
+await fgPage.evaluate(() => document.fonts.ready);
+await fgPage.screenshot({ path: join(root, 'docs/store/feature-graphic.png') });
+await fgPage.close();
+await browser.close();
 const fg = await sharp(join(root, 'docs/store/feature-graphic.png')).metadata();
 if (fg.width !== 1024 || fg.height !== 500) fail(`feature graphic ${fg.width}x${fg.height}`);
 console.log('  ok feature-graphic.png 1024x500');
+
 
 copyFileSync(join(root, 'client/public/icons/play-store-512.png'), join(root, 'docs/store/icon-512.png'));
 console.log('  ok icon-512.png');

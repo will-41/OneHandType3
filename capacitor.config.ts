@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appId: 'com.wilmymoise.onehandtype',
   appName: 'One-Type',
   webDir: 'dist/public',
-  backgroundColor: '#0f101a',
+  backgroundColor: '#16120d',
   server: { androidScheme: 'https' },
   android: { allowMixedContent: false },
 };

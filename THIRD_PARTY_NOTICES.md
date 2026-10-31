@@ -4,7 +4,7 @@ One-Type is released under the [MIT License](LICENSE). It is built on open-sourc
 
 ## Specific credits
 
-- **Inter typeface** by Rasmus Andersson, licensed under the [SIL Open Font License 1.1](https://openfontlicense.org), bundled through [`@fontsource/inter`](https://fontsource.org/fonts/inter).
+- **Atkinson Hyperlegible Next and Mono** (Braille Institute, Applied Design Works) and **Literata** (TypeTogether), each licensed under the [SIL Open Font License 1.1](https://openfontlicense.org), bundled through [`@fontsource/atkinson-hyperlegible-next`](https://fontsource.org/fonts/atkinson-hyperlegible-next), [`@fontsource/atkinson-hyperlegible-mono`](https://fontsource.org/fonts/atkinson-hyperlegible-mono) and [`@fontsource/literata`](https://fontsource.org/fonts/literata).
 - **Radix UI** primitives, licensed under the MIT License ([radix-ui.com](https://www.radix-ui.com)).
 - **Lucide** icons, licensed under the ISC License ([lucide.dev](https://lucide.dev)).
 - **ARTSEY**: the ARTSEY one-handed layout is a community-created chorded layout concept ([artsey.io](https://artsey.io)). It is referenced by name only; One-Type is not affiliated with or endorsed by the ARTSEY community.
@@ -37,7 +37,9 @@ All licenses are permissive (MIT, ISC, Apache-2.0, BSD-3-Clause, 0BSD, Unlicense
 | @floating-ui/dom | 1.8.0 | MIT | https://github.com/floating-ui/floating-ui |
 | @floating-ui/react-dom | 2.1.9 | MIT | https://github.com/floating-ui/floating-ui |
 | @floating-ui/utils | 0.2.12 | MIT | https://github.com/floating-ui/floating-ui |
-| @fontsource/inter | 5.3.0 | OFL-1.1 | https://github.com/fontsource/font-files |
+| @fontsource/atkinson-hyperlegible-mono | 5.3.0 | OFL-1.1 | https://github.com/fontsource/font-files |
+| @fontsource/atkinson-hyperlegible-next | 5.3.0 | OFL-1.1 | https://github.com/fontsource/font-files |
+| @fontsource/literata | 5.3.0 | OFL-1.1 | https://github.com/fontsource/font-files |
 | @jridgewell/gen-mapping | 0.3.13 | MIT | https://github.com/jridgewell/sourcemaps |
 | @jridgewell/resolve-uri | 3.1.2 | MIT | https://github.com/jridgewell/resolve-uri |
 | @jridgewell/sourcemap-codec | 1.6.0 | MIT | https://github.com/jridgewell/sourcemaps |

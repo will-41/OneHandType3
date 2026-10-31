@@ -12,7 +12,7 @@ const pngSize = async (res) => {
   return [b.readUInt32BE(16), b.readUInt32BE(20)];
 };
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || '/opt/pw-browsers/chromium' });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'allow' });
 const page = await ctx.newPage();
 const errors = [];

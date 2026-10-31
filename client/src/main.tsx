@@ -2,11 +2,14 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import PwaUpdatePrompt from './components/pwa/PwaUpdatePrompt';
-// Self-hosted Inter (SIL OFL 1.1): bundled, works offline, no font CDN.
-import '@fontsource/inter/400.css';
-import '@fontsource/inter/500.css';
-import '@fontsource/inter/600.css';
-import '@fontsource/inter/700.css';
+// Self-hosted Atkinson Hyperlegible Next and Mono, and Literata (all SIL OFL 1.1): bundled, work offline, no font CDN.
+import '@fontsource/atkinson-hyperlegible-next/latin-400.css';
+import '@fontsource/atkinson-hyperlegible-next/latin-500.css';
+import '@fontsource/atkinson-hyperlegible-next/latin-700.css';
+import '@fontsource/atkinson-hyperlegible-mono/latin-400.css';
+import '@fontsource/atkinson-hyperlegible-mono/latin-500.css';
+import '@fontsource/atkinson-hyperlegible-mono/latin-700.css';
+import '@fontsource/literata/latin-500.css';
 import './index.css';
 
 // Dark-first: avoid a light flash before the store syncs the theme.

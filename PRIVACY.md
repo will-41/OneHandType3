@@ -41,4 +41,4 @@ If this policy changes, the new version will be posted in the app, with an updat
 
 ## Contact
 
-Questions? Email [wilmymoise@gmail.com](mailto:wilmymoise@gmail.com).
+Questions? Email [Lot9services@gmail.com](mailto:Lot9services@gmail.com).

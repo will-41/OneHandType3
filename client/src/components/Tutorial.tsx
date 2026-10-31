@@ -27,13 +27,13 @@ const LAYOUT_CHOICES: { id: LayoutId; name: string; blurb: string }[] = [
 ];
 
 const BTN =
-  'inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl px-5 text-base font-semibold touch-manipulation transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';
-const BTN_PRIMARY = cn(BTN, 'bg-primary text-primary-foreground hover:bg-primary/90');
-const BTN_SECONDARY = cn(BTN, 'border border-border bg-card text-foreground hover:bg-muted');
+  'inline-flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-transparent px-5 text-base font-bold touch-manipulation transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';
+const BTN_PRIMARY = cn(BTN, 'bg-primary text-primary-foreground active:bg-primary/80');
+const BTN_SECONDARY = cn(BTN, 'border-input bg-transparent text-foreground active:bg-secondary');
 
 function StepHeading({ children, headingRef }: { children: ReactNode; headingRef: React.RefObject<HTMLHeadingElement> }) {
   return (
-    <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold tracking-tight focus:outline-none">
+    <h1 ref={headingRef} tabIndex={-1} className="font-display text-2xl font-medium leading-[1.875rem] focus:outline-none">
       {children}
     </h1>
   );
@@ -49,13 +49,13 @@ function HandPreview({ hand }: { hand: HandPreference }) {
     [hand],
   );
   return (
-    <div aria-hidden="true" data-testid="hand-preview" data-hand={hand} className="mx-auto flex w-full max-w-xs flex-col gap-1.5 rounded-2xl border border-border bg-card p-3">
+    <div aria-hidden="true" data-testid="hand-preview" data-hand={hand} className={cn('mx-auto flex w-full max-w-xs flex-col gap-1.5 border-input', hand === 'left' ? 'border-r-2 pr-2.5' : 'border-l-2 pl-2.5')}>
       {rows.map((row, i) => (
         <div key={i} className="flex justify-center gap-1.5">
           {row.map((k) => (
             <span
               key={`${i}-${k.key}`}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted font-mono text-sm font-semibold text-foreground"
+              className="flex h-8 w-8 items-center justify-center rounded-md bg-parchment font-mono text-sm font-medium text-parchment-foreground"
             >
               {k.key}
             </span>
@@ -86,15 +86,23 @@ function RadioCard({
       aria-checked={selected}
       onClick={onSelect}
       className={cn(
-        'flex min-h-[56px] w-full flex-col items-start gap-0.5 rounded-xl border-2 px-4 py-3 text-left transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-        selected ? 'border-primary bg-primary/10' : 'border-border bg-card hover:bg-muted',
+        'flex min-h-[56px] w-full items-start gap-3 rounded-lg border bg-card text-left transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        selected ? 'border-2 border-primary p-[15px]' : 'border-input p-4',
       )}
     >
-      <span className="flex w-full items-center justify-between gap-2 font-semibold text-foreground">
-        {title}
-        {badge && <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">{badge}</span>}
+      <span
+        aria-hidden="true"
+        className={cn('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2', selected ? 'border-primary' : 'border-input')}
+      >
+        {selected && <span className="h-2.5 w-2.5 rounded-full bg-primary" />}
       </span>
-      {description && <span className="text-sm text-muted-foreground">{description}</span>}
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="flex w-full items-center justify-between gap-2 font-bold text-foreground">
+          {title}
+          {badge && <span className="inline-flex h-6 items-center rounded-md bg-secondary px-2 text-sm font-bold text-secondary-foreground">{badge}</span>}
+        </span>
+        {description && <span className="text-sm leading-5 text-muted-foreground">{description}</span>}
+      </span>
     </button>
   );
 }
@@ -112,16 +120,20 @@ function MirrorDemo({ hand, layoutId, reduceMotion }: { hand: HandPreference; la
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-border bg-card p-3">
-        <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">What you typed</p>
+      <div className="rounded-lg border bg-card p-3">
+        <p className="text-[0.8125rem] font-medium leading-[1.125rem] text-muted-foreground">What you typed</p>
         <output
           data-testid="tutorial-demo-output"
           aria-live="polite"
-          className="block min-h-[2rem] break-all font-mono text-xl text-foreground"
+          className="block min-h-[2rem] break-all font-mono text-base text-foreground"
         >
           {typed || <span className="text-muted-foreground">Nothing yet. Try the Mirror key below.</span>}
         </output>
       </div>
+      <div
+        className={cn('border-input', hand === 'left' ? 'border-r-2 pr-2.5' : 'border-l-2 pl-2.5')}
+        style={{ ['--key-height' as string]: '3rem' }}
+      >
       <OneHandKeyboard
         layout={layout}
         mirrorLayout={mirrorLayout}
@@ -136,6 +148,7 @@ function MirrorDemo({ hand, layoutId, reduceMotion }: { hand: HandPreference; la
         onBackspace={() => setTyped((t) => t.slice(0, -1))}
         onInvalidChord={() => undefined}
       />
+      </div>
     </div>
   );
 }
@@ -176,7 +189,7 @@ export default function Tutorial({ onFinish }: TutorialProps) {
       case 0:
         return (
           <div className="space-y-5">
-            <div aria-hidden="true" className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-primary/15 text-primary">
+            <div aria-hidden="true" className="mx-auto flex h-16 w-16 items-center justify-center text-primary">
               <Keyboard className="h-12 w-12" />
             </div>
             <StepHeading headingRef={headingRef}>Welcome to One-Type</StepHeading>
@@ -184,13 +197,13 @@ export default function Tutorial({ onFinish }: TutorialProps) {
               Learn to type comfortably with one hand. Short lessons, a full on-screen keyboard built for a single hand, and a
               pace that is entirely yours.
             </p>
-            <ul className="space-y-3">
+            <ul className="divide-y divide-border overflow-hidden rounded-lg border bg-card">
               {[
                 { icon: <Hand className="h-5 w-5" />, text: 'Made for left or right hand, with every control within thumb reach.' },
                 { icon: <Sparkles className="h-5 w-5" />, text: 'Gentle progress and achievements. No timers, no daily streaks, no pressure.' },
                 { icon: <ShieldCheck className="h-5 w-5" />, text: 'Free, offline, and private. Everything stays on this device.' },
               ].map((f) => (
-                <li key={f.text} className="flex items-start gap-3 rounded-xl bg-card p-3 text-sm text-foreground">
+                <li key={f.text} className="flex items-start gap-3 px-4 py-3 text-base text-foreground">
                   <span aria-hidden="true" className="mt-0.5 text-primary">
                     {f.icon}
                   </span>
@@ -244,12 +257,12 @@ export default function Tutorial({ onFinish }: TutorialProps) {
             <StepHeading headingRef={headingRef}>Meet the Mirror key</StepHeading>
             <p className="text-base text-muted-foreground">
               Your keyboard shows one half of the letters. Tap{' '}
-              <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+              <span className="inline-flex items-center gap-1 font-bold text-foreground">
                 <FlipHorizontal2 aria-hidden="true" className="h-4 w-4" /> Mirror
               </span>{' '}
               and the keys flip to the other half. Then tap a letter to type it.
             </p>
-            <ol className="list-decimal space-y-1 pl-5 text-sm text-foreground">
+            <ol className="list-decimal space-y-0.5 pl-5 text-sm leading-5 text-foreground">
               <li>Tap Mirror. The keys flip.</li>
               <li>Tap any key. It types, and the keyboard flips back.</li>
               <li>
@@ -262,7 +275,7 @@ export default function Tutorial({ onFinish }: TutorialProps) {
       default:
         return (
           <div className="space-y-5 text-center">
-            <div aria-hidden="true" className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-primary/15 text-primary">
+            <div aria-hidden="true" className="mx-auto flex h-16 w-16 items-center justify-center text-primary">
               <Sparkles className="h-12 w-12" />
             </div>
             <StepHeading headingRef={headingRef}>You are ready</StepHeading>
@@ -284,14 +297,14 @@ export default function Tutorial({ onFinish }: TutorialProps) {
   })();
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]">
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))]">
       <div className={cn('flex items-center justify-between gap-3', mirrorRow(hand))}>
         <ol aria-label={`Tour progress, step ${step + 1} of ${STEP_COUNT}`} className="flex items-center gap-2 px-1">
           {Array.from({ length: STEP_COUNT }, (_, i) => (
             <li
               key={i}
               aria-current={i === step ? 'step' : undefined}
-              className={cn('h-2.5 rounded-full transition-all', i === step ? 'w-8 bg-primary' : i < step ? 'w-2.5 bg-primary/60' : 'w-2.5 bg-muted-foreground/40')}
+              className={cn('h-2 rounded-full transition-all', i === step ? 'w-6 bg-primary' : i < step ? 'w-2 bg-foreground' : 'box-border w-2 border-2 border-input')}
             >
               <span className="sr-only">
                 Step {i + 1}
@@ -301,7 +314,7 @@ export default function Tutorial({ onFinish }: TutorialProps) {
           ))}
         </ol>
         {!isLast && (
-          <button type="button" className={cn(BTN, 'px-4 text-muted-foreground hover:bg-muted hover:text-foreground')} onClick={() => finish('home')}>
+          <button type="button" className={cn(BTN, 'bg-transparent px-3 text-muted-foreground active:bg-secondary')} onClick={() => finish('home')}>
             Skip tour
           </button>
         )}
@@ -311,8 +324,8 @@ export default function Tutorial({ onFinish }: TutorialProps) {
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={step}
-            initial={reduceMotion ? false : { opacity: 0, x: hand === 'left' ? -24 : 24 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.18 }}
           >

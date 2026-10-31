@@ -7,7 +7,7 @@ const shots = process.argv[3] || null;
 const fail = (msg) => { console.error('WAVE-B FAIL:', msg); process.exit(1); };
 const ok = (msg) => console.log('  ok', msg);
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || '/opt/pw-browsers/chromium' });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true, serviceWorkers: 'block' });
 const page = await ctx.newPage();
 const errors = [];

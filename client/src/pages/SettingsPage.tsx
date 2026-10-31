@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Settings, Hand, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
+import { ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
 import { Switch } from '../components/ui/switch';
 import {
   Select,
@@ -40,8 +40,8 @@ const TEXT_SIZES = [
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mb-8" aria-label={title}>
-      <h2 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h2>
-      <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">{children}</div>
+      <h2 className="mb-3 text-lg font-bold leading-[1.625rem]">{title}</h2>
+      <div className="divide-y divide-border overflow-hidden rounded-lg border bg-card">{children}</div>
     </section>
   );
 }
@@ -63,7 +63,7 @@ function ToggleRow({
     <div className="flex min-h-[56px] items-center justify-between gap-4 px-4 py-3">
       <label htmlFor={id} className="flex-1 cursor-pointer">
         <span className="block font-medium">{label}</span>
-        {description && <span className="block text-sm text-muted-foreground">{description}</span>}
+        {description && <span className="block text-sm leading-5 text-muted-foreground">{description}</span>}
       </label>
       <Switch id={id} checked={checked} onCheckedChange={onChange} />
     </div>
@@ -82,7 +82,7 @@ function Segmented<T extends string | number>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="flex gap-1 rounded-lg bg-muted p-1">
+    <div role="radiogroup" aria-label={label} className="flex gap-1 rounded-lg border border-input bg-background p-1">
       {options.map((o) => {
         const selected = o.value === value;
         return (
@@ -93,8 +93,8 @@ function Segmented<T extends string | number>({
             aria-checked={selected}
             onClick={() => onChange(o.value)}
             className={cn(
-              'min-h-[48px] flex-1 rounded-md px-3 text-sm font-medium transition-colors',
-              selected ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground'
+              'min-h-[44px] flex-1 rounded-md px-2 text-base transition-colors',
+              selected ? 'bg-primary font-bold text-primary-foreground' : 'font-medium text-foreground'
             )}
           >
             {o.label}
@@ -140,32 +140,35 @@ export default function SettingsPage() {
 
   return (
     <PageContainer className="max-w-2xl">
-      <PageHeader title="Settings" description="Tune One-Type to the way you type." icon={<Settings className="h-5 w-5" />} />
+      <PageHeader title="Settings" description="Tune One-Type to the way you type." />
 
       <Group title="Typing">
-        <div className="space-y-3 px-4 py-3">
+        <div className="flex flex-col gap-3 p-4">
           <div>
-            <div className="flex items-center gap-2 font-medium">
-              <Hand className="h-4 w-4" aria-hidden="true" /> Typing hand
-            </div>
-            <p className="text-sm text-muted-foreground">
+            <div className="font-medium">Typing hand</div>
+            <p className="text-sm leading-5 text-muted-foreground">
               Left-hand mode mirrors the navigation bar and moves main actions to the left edge.
             </p>
           </div>
           <Segmented label="Typing hand" value={hand} options={handOptions} onChange={setHandPreference} />
+          {/* Tab-order preview: information, not a control. The mirror axis sits on its inner edge. */}
           <div
             aria-hidden="true"
-            className={cn('flex gap-1 rounded-lg border border-dashed border-border p-2 text-[11px] text-muted-foreground', mirrorRow(hand))}
+            className={cn(
+              'flex items-stretch gap-1.5 rounded-lg border border-dashed border-input py-2 text-[0.8125rem] leading-[1.125rem]',
+              hand === 'left' ? 'flex-row-reverse pl-2' : 'pr-2'
+            )}
           >
+            <span className={cn('w-[var(--mirror-axis)] shrink-0 bg-input', hand === 'left' ? 'ml-1' : 'mr-1')} />
             {TAB_PREVIEW.map((t) => (
-              <span key={t} className="flex-1 rounded bg-muted py-1 text-center">
+              <span key={t} className="flex-1 rounded-md bg-secondary py-1.5 text-center">
                 {t}
               </span>
             ))}
           </div>
         </div>
 
-        <div className="space-y-2 px-4 py-3">
+        <div className="flex flex-col gap-2 p-4">
           <label htmlFor="layout-select" className="block font-medium">
             Keyboard layout
           </label>
@@ -192,33 +195,33 @@ export default function SettingsPage() {
               )}
             </SelectContent>
           </Select>
-          {activeDescription && <p className="text-sm text-muted-foreground">{activeDescription}</p>}
+          {activeDescription && <p className="text-sm leading-5 text-muted-foreground">{activeDescription}</p>}
           <Button type="button" variant="outline" className="min-h-[48px] w-full gap-2" onClick={() => navigate('/settings/keyboard-builder')}>
-            <Plus className="h-4 w-4" aria-hidden="true" /> Create custom layout
+            <Plus className="h-5 w-5" aria-hidden="true" /> Create custom layout
           </Button>
           {customLayouts.length > 0 && (
-            <ul aria-label="My layouts" className="divide-y divide-border overflow-hidden rounded-lg border border-border">
+            <ul aria-label="My layouts" className="divide-y divide-border border-y border-border">
               {customLayouts.map((l) => (
-                <li key={l.id} className="flex items-center justify-between gap-2 py-1 pl-3 pr-1">
+                <li key={l.id} className="flex min-h-[56px] items-center justify-between gap-2 py-1">
                   <span className="min-w-0">
                     <span className="block truncate font-medium">{l.name}</span>
-                    <span className="block text-xs text-muted-foreground">{l.hand === 'left' ? 'Left' : 'Right'} hand</span>
+                    <span className="block text-sm leading-5 text-muted-foreground">{l.hand === 'left' ? 'Left' : 'Right'} hand</span>
                   </span>
                   <span className="flex shrink-0">
-                    <Button asChild variant="ghost" size="icon" className="h-12 w-12">
+                    <Button asChild variant="ghost" size="icon">
                       <Link href={`/settings/keyboard-builder/${l.id}`} aria-label={`Edit ${l.name}`}>
-                        <Pencil className="h-4 w-4" aria-hidden="true" />
+                        <Pencil className="h-5 w-5" aria-hidden="true" />
                       </Link>
                     </Button>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-12 w-12 text-destructive"
+                      className="text-destructive"
                       aria-label={`Delete ${l.name}`}
                       onClick={() => setPendingDelete(l)}
                     >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      <Trash2 className="h-5 w-5" aria-hidden="true" />
                     </Button>
                   </span>
                 </li>
@@ -252,7 +255,7 @@ export default function SettingsPage() {
           checked={themeMode === 'dark'}
           onChange={(v) => setThemeMode(v ? 'dark' : 'light')}
         />
-        <div className="space-y-2 px-4 py-3">
+        <div className="flex flex-col gap-3 p-4">
           <div className="font-medium">Text size</div>
           <Segmented
             label="Text size"
@@ -293,13 +296,13 @@ export default function SettingsPage() {
           <Link
             key={item.href}
             href={item.href}
-            className="flex min-h-[56px] items-center justify-between gap-4 px-4 py-3 hover:bg-muted focus-visible:bg-muted"
+            className="flex min-h-[56px] items-center justify-between gap-4 px-4 py-2 active:bg-secondary focus-visible:bg-secondary"
           >
             <span>
               <span className="block font-medium">{item.label}</span>
-              <span className="block text-sm text-muted-foreground">{item.hint}</span>
+              <span className="block text-sm leading-5 text-muted-foreground">{item.hint}</span>
             </span>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <ChevronRight className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
           </Link>
         ))}
       </Group>
@@ -312,10 +315,10 @@ export default function SettingsPage() {
               &ldquo;{pendingDelete?.name}&rdquo; will be removed from this device. If it is your active layout, QWERTY is used instead.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel className="min-h-[48px]">Cancel</AlertDialogCancel>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="min-h-[48px]"
+              className="bg-destructive text-destructive-foreground active:bg-destructive/80"
               onClick={() => {
                 if (pendingDelete) deleteCustomLayout(pendingDelete.id);
                 setPendingDelete(null);
